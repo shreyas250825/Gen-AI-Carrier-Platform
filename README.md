@@ -2,11 +2,11 @@
 
 A comprehensive platform for simulating mock interviews using AI technologies. This project provides an interactive environment for users to practice interviews, receive feedback, and improve their skills through real-time analysis of technical and behavioral performance.
 
-**Project Status**: 70% Complete
+**Project Status**: In Progress
 
 ## Competition Information
 
-This project is being developed for **Techfest 2025** - AWS Gen AI Challenge. Selected teams will be invited to Techfest 2025 for the in-person prototyping round.
+This project is being developed for **Techfest 2025** - AWS ImpactX Challenge. Selected teams will be invited to Techfest 2025 for the in-person prototyping round.
 
 ### Challenge Phases  
 
@@ -17,28 +17,41 @@ This project is being developed for **Techfest 2025** - AWS Gen AI Challenge. Se
 
 *Participants are recommended to build the prototype using kiro.dev (to be instructed by the AWS experts during round 2)*
 
-### Judging Criteria
-
-Submissions will be evaluated by a panel of experts based on the following criteria:
-
-- **Innovation & Originality**: Is the idea novel and creative?
-- **GenAI Application**: Is Generative AI used in a meaningful and core way?
-- **Impact & Value**: Does the solution address a significant problem and offer a clear value proposition?
-- **Feasibility & Team Capability**: Is the idea practical? Does the team (based on supporting materials) demonstrate the capability to build a prototype during Phase 2?
-- **Clarity**: How clearly and effectively is the idea communicated in the deck and video?
-
 
 ## Features
 
-- **AI-Powered Interview Questions**: Dynamic question generation based on role and experience level
-- **Real-time Feedback**: Instant evaluation of answers with detailed scoring
-- **Resume Analysis**: Automated parsing and analysis of uploaded resumes
-- **Behavioral Assessment**: Facial expression and speech pattern analysis
-- **Technical Evaluation**: Code and technical knowledge assessment
-- **Adaptive Questioning**: Questions adjust based on user performance
-- **Comprehensive Reports**: Detailed feedback with improvement suggestions
-- **Video Recording**: Session recording for review and analysis
-- **Multi-modal Interface**: Voice and text input options
+**AI-Driven Interview Question Generation**  
+  Generates role-specific and experience-aware interview questions using Generative AI models deployed on AWS.
+
+- **Real-Time Answer Evaluation & Scoring**  
+  Provides instant, structured feedback and scoring on candidate responses through AWS-based inference pipelines.
+
+- **Intelligent Resume Parsing & Analysis**  
+  Automatically extracts, structures, and analyzes resume data using AWS text analytics services.
+
+- **Behavioral & Communication Assessment**  
+  Evaluates facial expressions, tone, and speech patterns during interviews using AWS vision and media services.
+
+- **Technical & Coding Skill Evaluation**  
+  Assesses technical knowledge and problem-solving skills through secure AWS execution environments.
+
+- **Adaptive Interview Flow**  
+  Dynamically adjusts question difficulty and interview direction based on real-time candidate performance.
+
+- **Detailed Performance Reports**  
+  Generates comprehensive post-interview reports highlighting strengths, gaps, and improvement suggestions.
+
+- **Interview Session Recording & Playback**  
+  Securely records and stores interview sessions on AWS for review, analysis, and mentoring.
+
+- **Multi-Modal Interaction Support**  
+  Supports both voice and text-based interactions using AWS speech-to-text and text-to-speech services.
+
+- **Aptitude & Logical Reasoning Assessment**  
+  Includes aptitude-based and analytical reasoning questions to evaluate problem-solving ability.
+
+- **AI-Based Job Fit & Role Matching**  
+  Matches candidate resumes with job descriptions to generate job-fit scores and role suitability insights.
 
 ## Project Structure
 
