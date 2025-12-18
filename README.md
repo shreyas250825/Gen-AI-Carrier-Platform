@@ -1,26 +1,20 @@
-# Gen AI Carrier Platform
+# GenAI Career Intelligence Platform  
 
-A comprehensive platform for simulating mock interviews using AI technologies. This project provides an interactive environment for users to practice interviews, receive feedback, and improve their skills through real-time analysis of technical and behavioral performance.
+### AWS ImpactX Challenge – IIT Bombay TechFest Finals
 
-**Project Status**: In Progress
+An AI-powered, cloud-native interview and career intelligence platform built using **AWS Generative AI services** to help candidates prepare for interviews, assess job readiness, and improve employability through real-time feedback and adaptive evaluation.
 
-## Competition Information
+---
 
-This project is being developed for **Techfest 2025** - AWS ImpactX Challenge. Selected teams will be invited to Techfest 2025 for the in-person prototyping round.
+## 🚀 Overview
 
-### Challenge Phases  
+The **GenAI Career Intelligence Platform** simulates real-world interview scenarios by combining Generative AI, resume intelligence, behavioral analysis, and technical assessment. Designed for scalability and impact, the platform leverages AWS services to deliver secure, low-latency, and adaptive interview experiences.
 
-#### Phase 2: Build & Prototype
-- **Build**: Teams will build and refine their solutions using AWS tools and services
-- **Mentor**: AWS mentors and domain experts will provide technical and strategic guidance
-- **Present**: The challenge will conclude with final presentations and demos
+---
 
-*Participants are recommended to build the prototype using kiro.dev (to be instructed by the AWS experts during round 2)*
+## ✨ Key Features (Powered by AWS & Generative AI)
 
-
-## Features
-
-**AI-Driven Interview Question Generation**  
+- **AI-Driven Interview Question Generation**  
   Generates role-specific and experience-aware interview questions using Generative AI models deployed on AWS.
 
 - **Real-Time Answer Evaluation & Scoring**  
@@ -52,6 +46,73 @@ This project is being developed for **Techfest 2025** - AWS ImpactX Challenge. S
 
 - **AI-Based Job Fit & Role Matching**  
   Matches candidate resumes with job descriptions to generate job-fit scores and role suitability insights.
+
+---
+
+## 🏗️ AWS-Centric Architecture (High-Level)
+
+- **Generative AI**: AWS Bedrock (LLMs for question generation and evaluation)  
+- **Backend APIs**: AWS Lambda / FastAPI  
+- **Storage**: Amazon S3 (resumes, videos, reports)  
+- **Speech Services**: Amazon Transcribe & Amazon Polly  
+- **Vision Analysis**: Amazon Rekognition  
+- **Security & Access**: AWS IAM  
+- **Scalability**: Event-driven, serverless-first design
+
+---
+
+## 🎯 Use Cases
+
+- Interview preparation for students and job seekers  
+- Campus placement readiness assessment  
+- Career guidance and skill-gap analysis  
+- AI-driven mock interviews for institutions and enterprises  
+
+---
+
+## 🌍 Impact
+
+- Improves interview readiness and confidence  
+- Bridges the gap between resumes and real-world job expectations  
+- Scales interview preparation using responsible Generative AI  
+- Supports inclusive, accessible, and data-driven employability solutions  
+
+---
+
+## 🧪 Current Status
+
+- Functional AI interview flow  
+- Resume parsing and job-fit analysis implemented  
+- Real-time feedback engine integrated  
+- AWS-based deployment in progress
+
+---
+
+## 🏁 Built For
+
+**AWS ImpactX Challenge – IIT Bombay TechFest**  
+Team: *403 Forbidden*
+
+### Judging Criteria
+
+Submissions will be evaluated by a panel of experts based on the following criteria:
+
+- **Innovation & Originality**: Is the idea novel and creative?
+- **GenAI Application**: Is Generative AI used in a meaningful and core way?
+- **Impact & Value**: Does the solution address a significant problem and offer a clear value proposition?
+- **Feasibility & Team Capability**: Is the idea practical? Does the team (based on supporting materials) demonstrate the capability to build a prototype during Phase 2?
+- **Clarity**: How clearly and effectively is the idea communicated in the deck and video?
+
+*Participants are recommended to build the prototype using kiro.dev (to be instructed by the AWS experts during round 2)*
+
+---
+
+## 📌 Future Enhancements
+
+- Personalized learning pathways based on interview performance  
+- Institution-level dashboards and analytics  
+- Multilingual interview support  
+- Enterprise hiring workflow integration
 
 ## Project Structure
 
@@ -381,13 +442,14 @@ cd frontend && npm run lint
 - Update documentation for API changes
 - Ensure cross-browser compatibility
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is developed for academic, research, and hackathon purposes. Commercial usage is subject to licensing and approval.
 
 ## Acknowledgments
 
 - Built with FastAPI and React
-- AI capabilities powered by OpenAI GPT models
+- AI capabilities powered by AWS Generative AI services
 - UI components styled with Tailwind CSS
 - Icons from Lucide React
+- Developed for AWS ImpactX Challenge – IIT Bombay TechFest
