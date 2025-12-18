@@ -1,13 +1,31 @@
-# AI Mock Interview Simulator
+# Gen AI Carrier Platform
 
 A comprehensive platform for simulating mock interviews using AI technologies. This project provides an interactive environment for users to practice interviews, receive feedback, and improve their skills through real-time analysis of technical and behavioral performance.
 
-- Percentage Completed : 70%
-- Frontend Link - https://intervize.vercel.app/
-- Backend Link - https://iit-b-finals.onrender.com/
-- API Docs Link - https://iit-b-finals.onrender.com/docs/
-- Working Examples - https://github.com/shreyas250825/IIT-B-Finals/tree/main/working%20examples
-- Technical Documentation Link - https://github.com/shreyas250825/IIT-B-Finals/blob/main/AI%20Mock%20Interview%20Simulator%20Detailed%20Techical%20Documention.pdf
+**Project Status**: 70% Complete
+
+## Competition Information
+
+This project is being developed for **Techfest 2025** - AWS Gen AI Challenge. Selected teams will be invited to Techfest 2025 for the in-person prototyping round.
+
+### Challenge Phases  
+
+#### Phase 2: Build & Prototype
+- **Build**: Teams will build and refine their solutions using AWS tools and services
+- **Mentor**: AWS mentors and domain experts will provide technical and strategic guidance
+- **Present**: The challenge will conclude with final presentations and demos
+
+*Participants are recommended to build the prototype using kiro.dev (to be instructed by the AWS experts during round 2)*
+
+### Judging Criteria
+
+Submissions will be evaluated by a panel of experts based on the following criteria:
+
+- **Innovation & Originality**: Is the idea novel and creative?
+- **GenAI Application**: Is Generative AI used in a meaningful and core way?
+- **Impact & Value**: Does the solution address a significant problem and offer a clear value proposition?
+- **Feasibility & Team Capability**: Is the idea practical? Does the team (based on supporting materials) demonstrate the capability to build a prototype during Phase 2?
+- **Clarity**: How clearly and effectively is the idea communicated in the deck and video?
 
 
 ## Features
@@ -25,87 +43,59 @@ A comprehensive platform for simulating mock interviews using AI technologies. T
 ## Project Structure
 
 ```
-ai-mock-interview-simulator/
+gen-ai-carrier-platform/
 ├── backend/                          # Python FastAPI Backend
 │   ├── app/                          # Main application code
 │   │   ├── ai_engines/               # AI processing engines
-│   │   │   ├── behavioral_engine.py  # Behavioral analysis engine
-│   │   │   └── scoring_engine.py     # Technical scoring engine
 │   │   ├── middleware/               # FastAPI middleware
-│   │   │   ├── auth_middleware.py    # Authentication middleware
-│   │   │   └── cors.py               # CORS configuration
 │   │   ├── models/                   # SQLAlchemy models
-│   │   │   ├── interview.py          # Interview session model
-│   │   │   ├── report.py             # Analysis report model
-│   │   │   ├── response.py           # User response model
-│   │   │   ├── resume.py             # Resume data model
-│   │   │   └── user.py               # User profile model
 │   │   ├── routes/                   # API route handlers
-│   │   │   ├── health_check.py       # Health check endpoint
-│   │   │   ├── interview_routes.py   # Interview management routes
-│   │   │   ├── report_routes.py      # Report generation routes
-│   │   │   └── resume_routes.py      # Resume processing routes
 │   │   ├── schemas/                  # Pydantic schemas
-│   │   │   ├── analysis_schema.py    # Analysis data schemas
-│   │   │   ├── interview_schema.py   # Interview data schemas
-│   │   │   └── user_schema.py        # User data schemas
 │   │   ├── services/                 # Business logic services
-│   │   │   ├── interview_service.py  # Interview orchestration
-│   │   │   ├── llm.py                # LLM integration service
-│   │   │   ├── question_service.py   # Question generation service
-│   │   │   ├── report_service.py     # Report generation service
-│   │   │   ├── resume_service.py     # Resume processing service
-│   │   │   └── session_manager.py    # Session management service
 │   │   ├── utils/                    # Utility functions
-│   │   │   ├── http_utils.py         # HTTP utilities
-│   │   │   ├── text_utils.py         # Text processing utilities
-│   │   │   └── video_utils.py        # Video processing utilities
 │   │   ├── config.py                 # Application configuration
 │   │   ├── constants.py              # Application constants
 │   │   ├── database.py               # Database configuration
 │   │   └── main.py                   # FastAPI application entry point
+│   ├── data/                         # Data storage
+│   │   ├── demos/                    # Demo data files
+│   │   └── uploads/                  # User uploaded files
+│   ├── inferred_models/              # AI model inference
+│   ├── logs/                         # Application logs
+│   ├── static/                       # Static files
+│   ├── venv/                         # Python virtual environment
+│   ├── .env                          # Environment variables
 │   ├── create_tables.py              # Database table creation script
 │   ├── interview.db                  # SQLite database file
+│   ├── OPENROUTER_MIGRATION.md       # Migration documentation
 │   ├── pyproject.toml                # Python project configuration
-│   ├── requirements.txt              # Python dependencies
-│   └── logs/                         # Application logs directory
+│   └── requirements.txt              # Python dependencies
+├── chrome-extension/                 # Chrome Extension for Video/Camera
+│   ├── background.js                 # Extension background script
+│   ├── injected.js                   # Content script injection
+│   ├── manifest.json                 # Extension manifest
+│   ├── popup.html                    # Extension popup UI
+│   └── popup.js                      # Popup functionality
 ├── frontend/                         # React TypeScript Frontend
+│   ├── .vercel/                      # Vercel deployment config
+│   ├── dist/                         # Build output directory
+│   ├── node_modules/                 # Node.js dependencies
 │   ├── public/                       # Static assets
+│   │   ├── assets/                   # Public assets
+│   │   ├── videos/                   # Video files
 │   │   └── vite.svg                  # Vite logo
 │   ├── src/                          # Source code
 │   │   ├── components/               # React components
+│   │   │   ├── about/                # About page components
+│   │   │   ├── auth/                 # Authentication components
 │   │   │   ├── common/               # Shared components
-│   │   │   │   ├── ErrorBoundary.tsx # Error boundary component
-│   │   │   │   ├── Footer.tsx         # Footer component
-│   │   │   │   ├── LoadingSpinner.tsx # Loading spinner component
-│   │   │   │   └── Navbar.tsx         # Navigation bar component
+│   │   │   ├── dashboard/            # Dashboard components
 │   │   │   ├── feedback/             # Feedback-related components
-│   │   │   │   ├── BehavioralInsights.tsx # Behavioral analysis display
-│   │   │   │   ├── FeedbackDashboard.tsx # Main feedback dashboard
-│   │   │   │   ├── ImprovementPlan.tsx # Improvement suggestions
-│   │   │   │   ├── RadarChart.tsx     # Skills radar chart
-│   │   │   │   ├── TechnicalAnalysis.tsx # Technical analysis display
-│   │   │   │   └── VideoReplay.tsx    # Video replay component
 │   │   │   ├── interview/            # Interview interface components
-│   │   │   │   ├── AIAvatar.tsx       # AI avatar component
-│   │   │   │   ├── ControlsPanel.tsx  # Interview controls
-│   │   │   │   ├── InterviewInterface.tsx # Main interview interface
-│   │   │   │   ├── LiveMetrics.tsx    # Real-time metrics display
-│   │   │   │   ├── QuestionDisplay.tsx # Question display component
-│   │   │   │   └── VideoRecorder.tsx  # Video recording component
 │   │   │   ├── landing/              # Landing page components
-│   │   │   │   └── LandingPage.tsx    # Main landing page
 │   │   │   ├── layout/               # Layout components
-│   │   │   │   └── Layout.tsx         # Main layout wrapper
 │   │   │   ├── profile/              # Profile setup components
-│   │   │   │   ├── ManualSetup.tsx    # Manual profile setup
-│   │   │   │   ├── ProfileSetup.tsx   # Profile setup interface
-│   │   │   │   ├── ResumeUpload.tsx   # Resume upload component
-│   │   │   │   └── RoleSelector.tsx   # Role selection component
 │   │   │   └── reports/              # Report components
-│   │   │       ├── ComparisonView.tsx # Report comparison view
-│   │   │       ├── ReportList.tsx     # Report list component
-│   │   │       └── ReportViewer.tsx   # Report viewer component
 │   │   ├── hooks/                    # Custom React hooks
 │   │   │   ├── useAvatar.ts          # Avatar management hook
 │   │   │   ├── useFaceTracking.ts    # Face tracking hook
@@ -121,29 +111,49 @@ ai-mock-interview-simulator/
 │   │   │   ├── animations.css        # Animation styles
 │   │   │   ├── components.css        # Component-specific styles
 │   │   │   └── globals.css           # Global styles
+│   │   ├── types/                    # TypeScript type definitions
 │   │   ├── utils/                    # Utility functions
 │   │   │   ├── constants.ts          # Application constants
 │   │   │   ├── formatters.ts         # Data formatting utilities
 │   │   │   └── helpers.ts            # General helper functions
+│   │   ├── views/                    # View components
 │   │   ├── App.tsx                   # Main React application component
-│   │   └── main.tsx                  # React application entry point
+│   │   ├── main.tsx                  # React application entry point
+│   │   ├── style.css                 # Main stylesheet
+│   │   └── typescript.svg            # TypeScript logo
+│   ├── .gitignore                    # Git ignore rules
 │   ├── index.html                    # HTML template
 │   ├── package.json                  # Node.js dependencies and scripts
+│   ├── package-lock.json             # Dependency lock file
 │   ├── postcss.config.js             # PostCSS configuration
 │   ├── tailwind.config.js            # Tailwind CSS configuration
+│   ├── TODO.md                       # Frontend development tasks
 │   ├── tsconfig.json                 # TypeScript configuration
-│   ├── vite.config.ts                # Vite build configuration
-│   └── TODO.md                       # Frontend development tasks
+│   ├── vercel.json                   # Vercel deployment config
+│   └── vite.config.ts                # Vite build configuration
+├── scripts/                          # Build and deployment scripts
+├── venv/                             # Root virtual environment
+├── working examples/                 # Working code examples
+├── .env                              # Root environment variables
+├── .gitignore                        # Git ignore rules
 ├── docker-compose.dev.yml            # Development Docker Compose
 ├── docker-compose.prod.yml           # Production Docker Compose
 ├── Makefile                          # Build automation scripts
+├── postman_collection.json           # API testing collection
+├── render.yaml                       # Render deployment config
+├── start.md                          # Getting started guide
+├── test_imports.py                   # Import testing script
+├── test_openrouter.py                # OpenRouter API testing
+├── test_resume_upload.py             # Resume upload testing
+├── test_system.py                    # System testing script
 ├── TODO.md                           # Project-wide development tasks
+├── TODO_FIXES.md                     # Bug fixes and improvements
 └── README.md                         # This file
 ```
 
-## File Details
+## Key Components
 
-### Backend Components
+### Backend Architecture
 
 #### Core Application (`backend/app/`)
 - **`main.py`**: FastAPI application entry point with route registration and middleware setup
@@ -151,57 +161,53 @@ ai-mock-interview-simulator/
 - **`database.py`**: SQLAlchemy database connection and session management
 - **`constants.py`**: Application-wide constants and enumerations
 
-#### Models (`backend/app/models/`)
-- **`interview.py`**: Interview session data model with relationships
-- **`response.py`**: User response storage with analysis data
-- **`report.py`**: Generated report storage with detailed metrics
-- **`resume.py`**: Resume data extraction and storage
-- **`user.py`**: User profile and authentication data
+#### Modular Structure
+- **`ai_engines/`**: AI processing engines for behavioral and technical analysis
+- **`middleware/`**: FastAPI middleware for authentication and CORS
+- **`models/`**: SQLAlchemy models for database entities
+- **`routes/`**: API route handlers for different functionalities
+- **`schemas/`**: Pydantic schemas for request/response validation
+- **`services/`**: Business logic services and integrations
+- **`utils/`**: Utility functions for various operations
 
-#### API Routes (`backend/app/routes/`)
-- **`interview_routes.py`**: Interview lifecycle management (start, submit, complete)
-- **`report_routes.py`**: Report generation and retrieval
-- **`resume_routes.py`**: Resume upload and processing
-- **`health_check.py`**: Application health monitoring
+#### Data Management
+- **`data/demos/`**: Demo data and sample files
+- **`data/uploads/`**: User-uploaded resume and media files
+- **`interview.db`**: SQLite database for development
+- **`logs/`**: Application logging directory
 
-#### Services (`backend/app/services/`)
-- **`interview_service.py`**: Core interview orchestration logic
-- **`question_service.py`**: Dynamic question generation and management
-- **`llm.py`**: Large Language Model integration for AI responses
-- **`report_service.py`**: Report generation with analytics
-- **`resume_service.py`**: Resume parsing and analysis
-- **`session_manager.py`**: Interview session state management
+### Frontend Architecture
 
-#### AI Engines (`backend/app/ai_engines/`)
-- **`scoring_engine.py`**: Technical answer evaluation and scoring
-- **`behavioral_engine.py`**: Behavioral analysis from video/audio data
+#### Component Organization (`frontend/src/components/`)
+- **`about/`**: About page and information components
+- **`auth/`**: Authentication and user management
+- **`common/`**: Reusable UI components and utilities
+- **`dashboard/`**: User dashboard and overview
+- **`feedback/`**: Interview feedback and analysis display
+- **`interview/`**: Core interview interface and controls
+- **`landing/`**: Landing page and marketing components
+- **`layout/`**: Application layout and navigation
+- **`profile/`**: User profile setup and management
+- **`reports/`**: Report viewing and comparison tools
 
-#### Utilities (`backend/app/utils/`)
-- **`http_utils.py`**: HTTP request/response utilities
-- **`text_utils.py`**: Text processing and analysis functions
-- **`video_utils.py`**: Video processing and analysis utilities
-
-### Frontend Components
-
-#### Components (`frontend/src/components/`)
-- **Common Components**: Reusable UI elements (LoadingSpinner, ErrorBoundary, Navbar)
-- **Interview Components**: Core interview interface (AIAvatar, VideoRecorder, LiveMetrics)
-- **Feedback Components**: Analysis display (RadarChart, TechnicalAnalysis, BehavioralInsights)
-- **Profile Components**: User setup (ResumeUpload, RoleSelector, ProfileSetup)
-- **Report Components**: Report viewing and comparison tools
-
-#### Hooks (`frontend/src/hooks/`)
+#### React Hooks (`frontend/src/hooks/`)
 - **`useInterview.ts`**: Interview state management and API integration
 - **`useWebcam.ts`**: Webcam access and video recording
 - **`useSpeech.ts`**: Speech recognition and synthesis
 - **`useFaceTracking.ts`**: Facial expression analysis
 - **`useAvatar.ts`**: AI avatar animation control
 
-#### Services (`frontend/src/services/`)
-- **`api.ts`**: REST API client with error handling
-- **`llm.ts`**: Frontend LLM service integration
-- **`socket.ts`**: Real-time communication via WebSockets
-- **`metrics.ts`**: Performance metrics collection
+#### Services & Utilities
+- **`services/`**: API client, LLM integration, metrics, and WebSocket services
+- **`styles/`**: CSS files for animations, components, and global styles
+- **`utils/`**: Helper functions, constants, and formatters
+- **`types/`**: TypeScript type definitions
+
+### Chrome Extension
+- **`manifest.json`**: Extension configuration and permissions
+- **`background.js`**: Background service worker
+- **`popup.html/js`**: Extension popup interface
+- **`injected.js`**: Content script for webpage interaction
 
 ## Technology Stack
 
@@ -238,20 +244,17 @@ ai-mock-interview-simulator/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd ai-mock-interview-simulator
+   cd gen-ai-carrier-platform
    ```
 
 2. **Install Chrome Extension (Required for Video/Camera)**
-   ```bash
-   # Load the Chrome extension in developer mode
-   # 1. Open Chrome and go to chrome://extensions/
-   # 2. Enable "Developer mode" in the top right
-   # 3. Click "Load unpacked" and select the chrome-extension folder
-   # 4. Note the extension ID from the extension card
-   # 5. Update the extensionId in frontend/src/hooks/useWebcam.ts with the actual ID
-   ```
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" in the top right corner
+   - Click "Load unpacked" and select the `chrome-extension` folder
+   - Note the extension ID from the extension card
+   - Update the extensionId in `frontend/src/hooks/useWebcam.ts` with the actual ID
 
-2. **Backend Setup**
+3. **Backend Setup**
    ```bash
    cd backend
    python -m venv venv
@@ -260,24 +263,34 @@ ai-mock-interview-simulator/
    python create_tables.py
    ```
 
-3. **Frontend Setup**
+4. **Frontend Setup**
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
    ```
 
-4. **Environment Configuration**
-   - Copy `.env.example` to `.env` and configure environment variables
-   - Set up API keys for AI services (OpenAI, etc.)
+5. **Environment Configuration**
+   - Configure `.env` files in both root and backend directories
+   - Set up API keys for AI services (OpenAI, OpenRouter, etc.)
+   - Review `backend/OPENROUTER_MIGRATION.md` for API configuration details
 
-5. **Run Development Environment**
+6. **Run Development Environment**
    ```bash
    # Using Docker Compose (recommended)
    docker-compose -f docker-compose.dev.yml up
 
    # Or run manually
-   # Backend: cd backend && uvicorn app.main:app --reload
+   # Backend: cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    # Frontend: cd frontend && npm run dev
+   ```
+
+7. **Testing Setup**
+   ```bash
+   # Run system tests
+   python test_system.py
+   python test_imports.py
+   python test_openrouter.py
+   python test_resume_upload.py
    ```
 
 ### Production Deployment
@@ -294,22 +307,22 @@ ai-mock-interview-simulator/
 
 ## API Documentation
 
-### Interview Endpoints (simplified mock-interview flow)
+The API provides comprehensive endpoints for managing interviews, reports, and resume analysis. Full API documentation is available through the built-in Swagger UI when running the backend server.
 
-- `POST /api/interview/start` - Start new interview session (returns `session_id` and first `question`)
-- `POST /api/interview/answer` - Submit `{ session_id, question_id, transcript, metrics }` for evaluation
-- `POST /api/metrics` - (Optional) Push extra metrics blobs
-- `GET /api/interview/report/{session_id}` - Get final summary report for a session
+### Core Endpoints
 
-### Report Endpoints
+#### Interview Management
+- **Start Interview**: Initialize new interview session
+- **Submit Answer**: Process user responses with real-time evaluation
+- **Get Report**: Retrieve comprehensive performance analysis
 
-- `GET /api/v1/reports` - List user reports
-- `GET /api/v1/reports/{session_id}` - Get specific report
+#### Resume Processing
+- **Upload Resume**: Parse and analyze resume content
+- **Get Analysis**: Retrieve resume insights and recommendations
 
-### Resume Endpoints
-
-- `POST /api/v1/resume/upload` - Upload resume for analysis
-- `GET /api/v1/resume/{id}` - Get resume analysis
+#### Metrics & Reports
+- **Performance Metrics**: Real-time performance tracking
+- **Historical Reports**: Access previous interview sessions
 
 ## Usage
 
