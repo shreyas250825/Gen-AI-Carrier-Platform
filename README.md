@@ -51,6 +51,12 @@ The **GenAI Career Intelligence Platform** simulates real-world interview scenar
 
 ## 🏗️ AWS-Centric Architecture (High-Level)
 
+### Three-Level Intelligence System
+- **Level 1 - Deterministic Intelligence**: Rule-based fallback system (100% uptime)
+- **Level 2 - Local AI Intelligence**: Ollama integration for offline AI capability  
+- **Level 3 - Cloud AI Intelligence**: AWS Bedrock interface (pluggable)
+
+### AWS Services Integration
 - **Generative AI**: AWS Bedrock (LLMs for question generation and evaluation)  
 - **Backend APIs**: AWS Lambda / FastAPI  
 - **Storage**: Amazon S3 (resumes, videos, reports)  
@@ -58,6 +64,13 @@ The **GenAI Career Intelligence Platform** simulates real-world interview scenar
 - **Vision Analysis**: Amazon Rekognition  
 - **Security & Access**: AWS IAM  
 - **Scalability**: Event-driven, serverless-first design
+
+### Reliability & Fallback Architecture
+The platform ensures 100% uptime through automatic fallback:
+```
+Level 3 (AWS Bedrock) → Level 2 (Ollama) → Level 1 (Deterministic)
+```
+If cloud AI fails, the system seamlessly falls back to local AI, and ultimately to deterministic algorithms that always work.
 
 ---
 
@@ -81,10 +94,17 @@ The **GenAI Career Intelligence Platform** simulates real-world interview scenar
 
 ## 🧪 Current Status
 
-- Functional AI interview flow  
-- Resume parsing and job-fit analysis implemented  
-- Real-time feedback engine integrated  
-- AWS-based deployment in progress
+- ✅ **Three-Level Intelligence Architecture implemented**
+  - Level 1: Deterministic Intelligence (100% reliable fallback)
+  - Level 2: Local AI Intelligence (Ollama integration)
+  - Level 3: Cloud AI Intelligence (AWS Bedrock interface)
+- ✅ **Functional AI interview flow with automatic fallback**
+- ✅ **Resume parsing and job-fit analysis implemented**
+- ✅ **Real-time feedback engine integrated**
+- ✅ **NEW: Aptitude & Logical Reasoning Assessment**
+- ✅ **NEW: AI-Based Job Fit & Role Matching**
+- 🔄 **AWS-based deployment architecture documented**
+- 🔄 **Kiro.dev development environment ready**
 
 ---
 

@@ -31,25 +31,27 @@ class QuestionService:
             return self._get_static_questions(role, interview_type, count)
 
     def _generate_dynamic_questions(self, role, interview_type, count: int):
-        """Generate questions using cloud LLM engine with fallback"""
+        """Generate questions using the three-level intelligence architecture"""
         role_name = role.value if hasattr(role, 'value') else str(role)
         interview_type_name = interview_type.value if hasattr(interview_type, 'value') else str(interview_type)
 
-        # Create a minimal profile for the LLM engine
+        # Create a profile for the intelligence engine
         profile = {
             "role": role_name,
             "experience_level": "mid",  # Default assumption
             "skills": [],  # Could be enhanced with actual profile data
+            "experience_years": 3,  # Default assumption
             "industry": "technology"  # Default assumption
         }
 
         try:
-            # Use cloud LLM engine with OpenRouter first, local fallback
-            questions_data = generate_questions(
+            # Use the new three-level intelligence engine
+            from app.ai_engines.intelligence_engine import intelligence_engine
+            
+            questions_data = intelligence_engine.generate_questions(
                 profile=profile,
                 interview_type=interview_type_name,
-                persona="professional",
-                round_name="round1"
+                count=count
             )
 
             # Extract question texts from the structured response
@@ -69,7 +71,7 @@ class QuestionService:
                 return questions + static_questions
 
         except Exception as e:
-            print(f"Cloud LLM question generation failed: {e}")
+            print(f"Intelligence engine question generation failed: {e}")
             return self._get_static_questions(role, interview_type, count)
 
     def _get_static_questions(self, role, interview_type, count: int):
