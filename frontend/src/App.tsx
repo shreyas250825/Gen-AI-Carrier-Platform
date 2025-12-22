@@ -14,6 +14,8 @@ import Dashboard from './components/dashboard/Dashboard';
 import AboutPage from './components/about/AboutPage';
 import SignInPage from './components/auth/SignInPage';
 import SignUpPage from './components/auth/SignUpPage';
+import AptitudeAssessment from './components/aptitude/AptitudeAssessment';
+import JobFitAnalysis from './components/jobfit/JobFitAnalysis';
 
 function App() {
   // Disable automatic scroll restoration
@@ -87,6 +89,23 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout><ReportViewer /></Layout>
+            </ProtectedRoute>
+          } 
+        />
+        {/* NEW ROUTES: Aptitude Assessment and Job Fit Analysis */}
+        <Route 
+          path="/aptitude" 
+          element={
+            <ProtectedRoute>
+              <AptitudeAssessment />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/job-fit" 
+          element={
+            <ProtectedRoute>
+              <JobFitAnalysis />
             </ProtectedRoute>
           } 
         />

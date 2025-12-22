@@ -6,12 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import uuid
 
-from app.ai_engines.openrouter_engine import (
-    generate_questions_from_profile,
-    evaluate_answer,
-    improve_answer,
-    generate_final_report
-)
+from app.ai_engines.gemini_engine import GeminiEngine
 
 router = APIRouter()
 
@@ -76,6 +71,9 @@ class ReportListRes(BaseModel):
 
 SESSIONS: Dict[str, Dict[str, Any]] = {}
 
+# Initialize Gemini engine
+gemini_engine = GeminiEngine()
+
 
 @router.post("/interview/start", response_model=StartRes)
 def start(req: StartReq) -> StartRes:
@@ -92,8 +90,8 @@ def start(req: StartReq) -> StartRes:
   profile["interview_type"] = interview_type
   profile["persona"] = persona
 
-  # Generate questions using OpenRouter engine
-  questions = generate_questions_from_profile(
+  # Generate first question using Gemini engine
+  first_question = gemini_engine.generate_first_question(
       profile=profile,
       persona=persona,
       interview_type=interview_type
@@ -103,17 +101,16 @@ def start(req: StartReq) -> StartRes:
     "profile": profile,
     "interview_type": interview_type,
     "persona": persona,
-    "questions": questions,
+    "conversation_history": [],
+    "current_question_number": 1,
     "answers": [],
     "evaluations": [],
-    "current_question_index": 0,
     "created_at": datetime.utcnow().isoformat(),
     "role": role,
     "started_at": datetime.utcnow().isoformat(),
   }
 
-  first = questions[0]
-  return StartRes(session_id=session_id, question=first)
+  return StartRes(session_id=session_id, question=first_question)
 
 
 @router.post("/interview/answer", response_model=AnswerRes)
@@ -122,53 +119,69 @@ def answer(req: AnswerReq) -> AnswerRes:
   if not session:
     raise HTTPException(status_code=404, detail="Session not found")
 
-  # Find question object, text, and index
-  question_obj = None
+  # Get current question text from conversation history or generate it
   question_text = ""
-  idx = 0
-  for i, q in enumerate(session["questions"]):
-    if str(q.get("id")) == str(req.question_id):
-      question_obj = q
-      question_text = q.get("text") or q.get("question") or ""
-      idx = i
-      break
+  if session["conversation_history"]:
+    # Find the last question in conversation history
+    for entry in reversed(session["conversation_history"]):
+      if entry["type"] == "question":
+        question_text = entry["content"]
+        break
   
-  # Get ideal answer and expected keywords from question
-  ideal_answer = question_obj.get("ideal_answer", "")
-  expected_keywords = question_obj.get("expected_keywords", [])
+  if not question_text:
+    # This shouldn't happen, but fallback to a generic question
+    question_text = "Please tell me about your experience."
 
-  # Evaluate answer using OpenRouter
-  eval_res = evaluate_answer(
+  # Evaluate answer using Gemini
+  eval_res = gemini_engine.evaluate_answer(
       question_text=question_text,
-      transcript=req.transcript,
-      expected_keywords=expected_keywords,
-      profile=session.get("profile") or {},
-      ideal_answer=ideal_answer
+      answer=req.transcript,
+      profile=session.get("profile", {}),
+      conversation_history=session.get("conversation_history", [])
   )
   
-  # Generate improved answer
-  improved = improve_answer(
-      question_text,
-      req.transcript,
-      session.get("profile") or {}
+  # Generate improved answer using Gemini
+  improved = gemini_engine.improve_answer(
+      question_text=question_text,
+      answer=req.transcript,
+      profile=session.get("profile", {})
   )
 
-  session["answers"].append(
+  # Add question and answer to conversation history
+  session["conversation_history"].extend([
     {
-      "question_id": req.question_id,
-      "question": question_text,
-      "transcript": req.transcript,
-      "metrics": req.metrics,
+      "type": "question",
+      "content": question_text,
+      "question_number": session["current_question_number"]
+    },
+    {
+      "type": "answer", 
+      "content": req.transcript,
+      "question_number": session["current_question_number"],
       "evaluation": eval_res,
-      "improved": improved,
+      "improved": improved
     }
-  )
+  ])
+
+  session["answers"].append({
+    "question_id": req.question_id,
+    "question": question_text,
+    "transcript": req.transcript,
+    "metrics": req.metrics,
+    "evaluation": eval_res,
+    "improved": improved,
+  })
   session["evaluations"].append(eval_res)
 
-  # Determine next question if available
+  # Generate next question if we haven't reached 8 questions yet
   next_q: Optional[Dict[str, Any]] = None
-  if idx + 1 < len(session["questions"]):
-    next_q = session["questions"][idx + 1]
+  if session["current_question_number"] < 8:
+    session["current_question_number"] += 1
+    next_q = gemini_engine.generate_next_question(
+        profile=session.get("profile", {}),
+        conversation_history=session["conversation_history"],
+        question_number=session["current_question_number"]
+    )
 
   return AnswerRes(evaluation=eval_res, improved=improved, next_question=next_q)
 
@@ -192,9 +205,9 @@ def report(session_id: str) -> ReportRes:
 
   evals: List[Dict[str, Any]] = session.get("evaluations", [])
   
-  # Generate final report using OpenRouter
+  # Generate final report using Gemini
   try:
-    report_data = generate_final_report(session)
+    report_data = gemini_engine.generate_final_report(session)
     summary = report_data.get("overall_summary", "")
     if not summary:
       # Fallback to simple summary
@@ -224,9 +237,20 @@ def report(session_id: str) -> ReportRes:
     else:
       summary = "No answers recorded for this session."
 
+  # Convert conversation history to questions format for compatibility
+  questions = []
+  for entry in session.get("conversation_history", []):
+    if entry["type"] == "question":
+      questions.append({
+        "id": f"q{entry['question_number']}",
+        "text": entry["content"],
+        "type": "conversational",
+        "difficulty": "medium"
+      })
+
   return ReportRes(
     session_id=session_id,
-    questions=session.get("questions", []),
+    questions=questions,
     evaluations=evals,
     answers=session.get("answers", []),
     summary=summary,
@@ -252,6 +276,9 @@ def list_reports() -> ReportListRes:
     else:
       tech = comm = conf = overall = 0.0
     
+    # Count questions from conversation history
+    question_count = len([entry for entry in session.get("conversation_history", []) if entry["type"] == "question"])
+    
     reports.append(ReportListItem(
       session_id=session_id,
       role=session.get("role", "Software Engineer"),
@@ -261,7 +288,7 @@ def list_reports() -> ReportListRes:
       technical_score=tech,
       communication_score=comm,
       confidence_score=conf,
-      questions_count=len(session.get("questions", []))
+      questions_count=question_count
     ))
   
   # Sort by created_at descending (most recent first)

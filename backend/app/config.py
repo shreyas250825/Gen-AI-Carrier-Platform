@@ -32,10 +32,8 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_URL: str = "http://localhost:3000"
     
-    # AI Models - OpenRouter
-    OPENROUTER_API_KEY: Optional[str] = None
-    OPENROUTER_MODEL: str = "amazon/nova-2-lite-v1:free"
-    OPENROUTER_BASE: str = "https://api.openrouter.ai/v1/chat/completions"
+    # AI Models - Gemini
+    GEMINI_API_KEY: Optional[str] = None
     
     # Legacy - kept for backward compatibility
     HUGGINGFACE_API_KEY: Optional[str] = None

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, Mic, BarChart3, Home, Info, User, Menu, X, LogOut } from 'lucide-react';
+import { Sparkles, Mic, BarChart3, Home, Info, User, Menu, X, LogOut, Target, Brain } from 'lucide-react';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ const Navbar = () => {
     if (path.startsWith('/setup') || path.startsWith('/interview')) return 'interview';
     if (path.startsWith('/dashboard')) return 'dashboard';
     if (path.startsWith('/reports') || path.startsWith('/report')) return 'reports';
+    if (path.startsWith('/job-fit')) return 'jobfit';
+    if (path.startsWith('/aptitude')) return 'aptitude';
     if (path.startsWith('/about')) return 'about';
     return '';
   };
@@ -95,6 +97,8 @@ const Navbar = () => {
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'interview', label: 'Start Interview', icon: Mic, href: '/setup' },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/dashboard', protected: true },
+    { id: 'aptitude', label: 'Aptitude', icon: Brain, href: '/aptitude', protected: true },
+    { id: 'jobfit', label: 'Job Fit', icon: Target, href: '/job-fit', protected: true },
     { id: 'reports', label: 'Report', icon: BarChart3, href: '/reports', protected: true },
     { id: 'about', label: 'About', icon: Info, href: '/about' }
   ].filter(link => !link.protected || isAuthenticated);

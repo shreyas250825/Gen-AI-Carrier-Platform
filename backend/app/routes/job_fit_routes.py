@@ -12,7 +12,7 @@ import logging
 import json
 
 from app.database import get_db
-from app.ai_engines.cloud_llm_engine import calculate_job_fit
+from app.ai_engines.gemini_engine import GeminiEngine
 from app.services.resume_service import ResumeService
 from app.schemas.analysis_schema import JobFitRequest, JobFitResult, RoleMatchingRequest
 
@@ -20,11 +20,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/job-fit", tags=["job-fit"])
 
+# Initialize Gemini engine
+gemini_engine = GeminiEngine()
+
 
 @router.post("/analyze", response_model=JobFitResult)
 async def analyze_job_fit(
-    request: JobFitRequest,
-    db: Session = Depends(get_db)
+    request: JobFitRequest
+    # Removed db dependency for now since we don't actually use it in this endpoint
 ):
     """
     Analyze job fit between candidate profile and job description.
@@ -38,12 +41,12 @@ async def analyze_job_fit(
     - Personalized recommendations
     """
     try:
-        logger.info(f"Analyzing job fit for role: {request.job_description.get('title', 'Unknown')}")
+        logger.info(f"Analyzing job fit for role: {request.job_description.title}")
         
         # Calculate job fit using intelligence engine
-        fit_analysis = calculate_job_fit(
-            resume_data=request.resume_data,
-            job_description=request.job_description
+        fit_analysis = gemini_engine.calculate_job_fit(
+            resume_data=request.resume_data.dict(),
+            job_description=request.job_description.dict()
         )
         
         return JobFitResult(
@@ -57,18 +60,18 @@ async def analyze_job_fit(
             recommendations=fit_analysis['recommendations'],
             detailed_analysis={
                 'skill_breakdown': _analyze_skill_categories(
-                    request.resume_data.get('skills', []),
-                    request.job_description.get('required_skills', []),
-                    request.job_description.get('preferred_skills', [])
+                    request.resume_data.skills,
+                    request.job_description.required_skills,
+                    request.job_description.preferred_skills or []
                 ),
                 'experience_analysis': _analyze_experience_fit(
-                    request.resume_data.get('experience_years', 0),
-                    request.job_description.get('required_experience_years', 0),
-                    request.resume_data.get('projects', [])
+                    request.resume_data.experience_years,
+                    request.job_description.required_experience_years,
+                    request.resume_data.projects or []
                 ),
                 'education_match': _analyze_education_fit(
-                    request.resume_data.get('education', {}),
-                    request.job_description.get('education_requirements', {})
+                    request.resume_data.education or {},
+                    request.job_description.education_requirements or {}
                 )
             }
         )
@@ -81,8 +84,7 @@ async def analyze_job_fit(
 @router.post("/upload-resume-analyze")
 async def analyze_job_fit_from_resume(
     resume_file: UploadFile = File(...),
-    job_description: str = None,
-    db: Session = Depends(get_db)
+    job_description: str = None
 ):
     """
     Upload resume file and analyze job fit against provided job description.
@@ -110,7 +112,7 @@ async def analyze_job_fit_from_resume(
         )
         
         # Analyze job fit
-        fit_analysis = calculate_job_fit(
+        fit_analysis = gemini_engine.calculate_job_fit(
             resume_data=parsed_resume,
             job_description=job_desc_data
         )
@@ -130,8 +132,7 @@ async def analyze_job_fit_from_resume(
 
 @router.post("/role-matching", response_model=List[Dict[str, Any]])
 async def find_matching_roles(
-    request: RoleMatchingRequest,
-    db: Session = Depends(get_db)
+    request: RoleMatchingRequest
 ):
     """
     Find best matching roles for a candidate based on their profile.
@@ -180,7 +181,7 @@ async def find_matching_roles(
         # Analyze fit for each role
         role_matches = []
         for role in sample_roles:
-            fit_analysis = calculate_job_fit(
+            fit_analysis = gemini_engine.calculate_job_fit(
                 resume_data=request.candidate_profile,
                 job_description=role
             )

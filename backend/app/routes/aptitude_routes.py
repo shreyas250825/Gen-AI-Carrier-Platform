@@ -11,18 +11,20 @@ from typing import List, Dict, Any
 import logging
 
 from app.database import get_db
-from app.ai_engines.cloud_llm_engine import generate_aptitude_questions, evaluate_aptitude_answer
+from app.ai_engines.gemini_engine import GeminiEngine
 from app.schemas.analysis_schema import AptitudeQuestionRequest, AptitudeAnswerSubmission, AptitudeResult
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/aptitude", tags=["aptitude"])
 
+# Initialize Gemini engine
+gemini_engine = GeminiEngine()
+
 
 @router.post("/generate", response_model=List[Dict[str, Any]])
 async def generate_aptitude_test(
-    request: AptitudeQuestionRequest,
-    db: Session = Depends(get_db)
+    request: AptitudeQuestionRequest
 ):
     """
     Generate aptitude and logical reasoning questions.
@@ -37,7 +39,7 @@ async def generate_aptitude_test(
     try:
         logger.info(f"Generating {request.count} aptitude questions (difficulty: {request.difficulty})")
         
-        questions = generate_aptitude_questions(
+        questions = gemini_engine.generate_aptitude_questions(
             difficulty=request.difficulty,
             count=request.count
         )
@@ -62,8 +64,7 @@ async def generate_aptitude_test(
 
 @router.post("/evaluate", response_model=AptitudeResult)
 async def evaluate_aptitude_answer(
-    submission: AptitudeAnswerSubmission,
-    db: Session = Depends(get_db)
+    submission: AptitudeAnswerSubmission
 ):
     """
     Evaluate a single aptitude question answer.
@@ -79,7 +80,7 @@ async def evaluate_aptitude_answer(
         
         # For this demo, we'll regenerate the question to get the correct answer
         # In production, you'd store questions in database with correct answers
-        all_questions = generate_aptitude_questions(
+        all_questions = gemini_engine.generate_aptitude_questions(
             difficulty=submission.difficulty or "medium",
             count=10  # Generate more to find the matching question
         )
@@ -99,7 +100,7 @@ async def evaluate_aptitude_answer(
                 'explanation': 'Question not found in current session'
             }
         
-        result = evaluate_aptitude_answer(target_question, submission.user_answer)
+        result = gemini_engine.evaluate_aptitude_answer(target_question, submission.user_answer)
         
         return AptitudeResult(
             question_id=submission.question_id,
@@ -117,8 +118,7 @@ async def evaluate_aptitude_answer(
 
 @router.post("/batch-evaluate", response_model=List[AptitudeResult])
 async def evaluate_aptitude_batch(
-    submissions: List[AptitudeAnswerSubmission],
-    db: Session = Depends(get_db)
+    submissions: List[AptitudeAnswerSubmission]
 ):
     """
     Evaluate multiple aptitude answers in batch.
@@ -131,7 +131,7 @@ async def evaluate_aptitude_batch(
         results = []
         
         # Generate questions to get correct answers
-        all_questions = generate_aptitude_questions(difficulty="medium", count=20)
+        all_questions = gemini_engine.generate_aptitude_questions(difficulty="medium", count=20)
         question_lookup = {q['id']: q for q in all_questions}
         
         for submission in submissions:
@@ -145,7 +145,7 @@ async def evaluate_aptitude_batch(
                     'explanation': 'Question not found'
                 }
             
-            result = evaluate_aptitude_answer(target_question, submission.user_answer)
+            result = gemini_engine.evaluate_aptitude_answer(target_question, submission.user_answer)
             
             results.append(AptitudeResult(
                 question_id=submission.question_id,
@@ -171,7 +171,7 @@ async def get_sample_questions():
     Returns a few example questions to show the format and types available.
     """
     try:
-        sample_questions = generate_aptitude_questions(difficulty="easy", count=3)
+        sample_questions = gemini_engine.generate_aptitude_questions(difficulty="easy", count=3)
         
         # Remove correct answers for public display
         public_samples = []

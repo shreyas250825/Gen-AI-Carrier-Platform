@@ -9,7 +9,6 @@ import {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  useState('overview'); // activeTab state kept for potential future use
   const [userProfile, setUserProfile] = useState<any>(null);
   const [interviewHistory, setInterviewHistory] = useState<any[]>([]);
 
@@ -20,7 +19,7 @@ const Dashboard = () => {
       try {
         setUserProfile(JSON.parse(profile));
       } catch (e) {
-        console.error('Failed to parse profile:', e);
+        // Failed to parse profile, continue with null
       }
     }
 
@@ -33,7 +32,7 @@ const Dashboard = () => {
         try {
           localHistory = JSON.parse(history);
         } catch (e) {
-          console.error('Failed to parse history:', e);
+          // Failed to parse history, continue with empty array
         }
       }
 
@@ -60,7 +59,6 @@ const Dashboard = () => {
         setInterviewHistory([...merged, ...localOnly]);
       } catch (err) {
         // If API fails, use localStorage only
-        console.error('Failed to fetch from API, using localStorage:', err);
         setInterviewHistory(localHistory);
       }
     };
@@ -255,12 +253,12 @@ const Dashboard = () => {
                       {[
                         { name: "Technical", icon: Brain, color: "from-sky-400 to-cyan-400", type: "technical" },
                         { name: "Behavioral", icon: Target, color: "from-purple-500 to-pink-500", type: "behavioral" },
-                        { name: "Case Study", icon: FileText, color: "from-orange-500 to-yellow-500", type: "case_study" },
-                        { name: "System Design", icon: Activity, color: "from-blue-400 to-purple-500", type: "system_design" }
+                        { name: "Aptitude Test", icon: BookOpen, color: "from-orange-500 to-yellow-500", type: "aptitude", route: "/aptitude" },
+                        { name: "Job Fit Analysis", icon: Activity, color: "from-blue-400 to-purple-500", type: "job_fit", route: "/job-fit" }
                       ].map((type, i) => (
                         <button
                           key={i}
-                          onClick={() => handleStartInterview(type.type)}
+                          onClick={() => type.route ? navigate(type.route) : handleStartInterview(type.type)}
                           className="group/btn relative"
                         >
                           <div className={`absolute inset-0 bg-gradient-to-r ${type.color} rounded-xl blur opacity-0 group-hover/btn:opacity-50 transition-all duration-300`}></div>
@@ -273,7 +271,6 @@ const Dashboard = () => {
                           </div>
                         </button>
                       ))}
-                    </div>
                     
                     <button 
                       onClick={() => handleStartInterview()}
@@ -426,6 +423,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </Layout>

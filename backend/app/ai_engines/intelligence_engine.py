@@ -17,7 +17,6 @@ from datetime import datetime
 
 # Import existing engines for backward compatibility
 from app.ai_engines.local_llm_engine import call_local_llm
-from app.ai_engines.openrouter_engine import call_openrouter
 
 logger = logging.getLogger(__name__)
 
