@@ -1,0 +1,408 @@
+# GenAI Career Intelligence Platform - Complete Docker Configuration
+# Supports development, testing, and production environments
+version: '3.8'
+
+services:
+  # ============================================================================
+  # FRONTEND SERVICE
+  # ============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: ${FRONTEND_TARGET:-development}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
+      - REACT_APP_ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      # Development: Mount source for hot reload
+      - ./frontend/src:/app/src:${VOLUME_MODE:-rw}
+      - ./frontend/public:/app/public:${VOLUME_MODE:-rw}
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    profiles:
+      - frontend
+      - full
+
+  # ============================================================================
+  # BACKEND SERVICE
+  # ============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: ${BACKEND_TARGET:-development}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      # Application Settings
+      - DEBUG=${DEBUG:-true}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - PORT=8000
+      - CORS_ORIGINS=["http://localhost:3000", "http://frontend:3000"]
+      
+      # Database Configuration
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/genai_career}
+      
+      # AI Engine Configuration
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.1:8b}
+      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-30}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-pro}
+      - PREFER_OLLAMA=${PREFER_OLLAMA:-true}
+      - FALLBACK_TO_GEMINI=${FALLBACK_TO_GEMINI:-true}
+      
+      # Storage Configuration
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      
+      # Security Settings
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-["localhost", "127.0.0.1"]}
+      
+      # Performance Settings
+      - MAX_CONCURRENT_REQUESTS=${MAX_CONCURRENT_REQUESTS:-10}
+      - CACHE_TTL=${CACHE_TTL:-300}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-100}
+    volumes:
+      # Development: Mount source for hot reload
+      - ./backend:/app:${VOLUME_MODE:-rw}
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    depends_on:
+      - mongodb
+      - ollama
+      - redis
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - backend
+      - full
+
+  # ============================================================================
+  # OLLAMA AI SERVICE (Local LLM Processing)
+  # ============================================================================
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./ollama/models:/models:ro
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        reservations:
+          memory: ${OLLAMA_MEMORY:-4G}
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-8G}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - ai
+      - full
+
+  # ============================================================================
+  # OLLAMA MODEL SETUP (Init Container)
+  # ============================================================================
+  ollama-setup:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - genai-network
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama to be ready...' &&
+        sleep 30 &&
+        echo 'Pulling model: ${OLLAMA_MODEL:-llama3.1:8b}' &&
+        ollama pull ${OLLAMA_MODEL:-llama3.1:8b} &&
+        echo 'Model setup complete!'
+      "
+    restart: "no"
+    profiles:
+      - setup
+      - full
+
+  # ============================================================================
+  # MONGODB DATABASE
+  # ============================================================================
+  mongodb:
+    image: mongo:${MONGODB_VERSION:-7.0}
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_ROOT_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD:-password}
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-genai_career}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+      - ./mongodb/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    command: mongod --auth --bind_ip_all
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - database
+      - full
+
+  # ============================================================================
+  # REDIS CACHE
+  # ============================================================================
+  redis:
+    image: redis:${REDIS_VERSION:-7.2-alpine}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    command: >
+      sh -c "
+        if [ -n '${REDIS_PASSWORD}' ]; then
+          redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
+        else
+          redis-server /usr/local/etc/redis/redis.conf
+        fi
+      "
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - cache
+      - full
+
+  # ============================================================================
+  # NGINX REVERSE PROXY & LOAD BALANCER
+  # ============================================================================
+  nginx:
+    image: nginx:${NGINX_VERSION:-alpine}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - proxy
+      - production
+
+  # ============================================================================
+  # MONITORING & OBSERVABILITY
+  # ============================================================================
+  
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-latest}
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    profiles:
+      - monitoring
+
+  # Grafana - Metrics Visualization
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-latest}
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    profiles:
+      - monitoring
+
+  # ============================================================================
+  # DEVELOPMENT & TESTING SERVICES
+  # ============================================================================
+  
+  # LocalStack - AWS Services Emulation
+  localstack:
+    image: localstack/localstack:${LOCALSTACK_VERSION:-latest}
+    ports:
+      - "${LOCALSTACK_PORT:-4566}:4566"
+    environment:
+      - SERVICES=${LOCALSTACK_SERVICES:-s3,cloudwatch,iam}
+      - DEBUG=${LOCALSTACK_DEBUG:-1}
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - genai-network
+    restart: ${RESTART_POLICY:-unless-stopped}
+    profiles:
+      - development
+      - testing
+
+  # Test Runner
+  test-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/genai_career_test
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - AWS_ENDPOINT_URL=http://localstack:4566
+    volumes:
+      - ./backend:/app:ro
+      - test_reports:/app/reports
+    depends_on:
+      - mongodb
+      - ollama
+      - localstack
+    networks:
+      - genai-network
+    command: >
+      sh -c "
+        echo 'Running test suite...' &&
+        pytest tests/ -v --cov=app --cov-report=html:/app/reports/coverage &&
+        echo 'Tests completed!'
+      "
+    profiles:
+      - testing
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  genai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  # Application Data
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+  
+  # Application Files
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  
+  # Monitoring Data
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  
+  # Development & Testing
+  localstack_data:
+    driver: local
+  test_reports:
+    driver: local
+  
+  # Proxy & Logs
+  nginx_logs:
+    driver: local
+
+# ============================================================================
+# CONFIGURATION PROFILES
+# ============================================================================
+# Usage Examples:
+#
+# Development (Frontend + Backend + AI):
+#   docker-compose --profile full up -d
+#
+# Backend Only:
+#   docker-compose --profile backend --profile database --profile ai up -d
+#
+# Production (All services with monitoring):
+#   docker-compose --profile full --profile monitoring --profile proxy up -d
+#
+# Testing:
+#   docker-compose --profile testing up --abort-on-container-exit
+#
+# AI Services Only:
+#   docker-compose --profile ai up -d
+#
+# Database Only:
+#   docker-compose --profile database up -d

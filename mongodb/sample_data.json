@@ -1,0 +1,336 @@
+{
+  "interview_sessions": [
+    {
+      "_id": "675f1a2b3c4d5e6f78901234",
+      "candidateName": "Shreyas",
+      "role": "Software Engineer",
+      "interviewType": "Mock Interview",
+      "score": 86,
+      "feedback": "Strong fundamentals, clear communication",
+      "createdAt": "2025-12-23",
+      "duration": 45,
+      "questions": [
+        {
+          "question": "Explain the difference between REST and GraphQL APIs",
+          "answer": "REST uses multiple endpoints while GraphQL uses a single endpoint with flexible queries",
+          "score": 9,
+          "feedback": "Excellent understanding of API architectures"
+        },
+        {
+          "question": "How do you handle state management in React?",
+          "answer": "Using useState, useReducer, and Context API for local state, Redux for global state",
+          "score": 8,
+          "feedback": "Good knowledge of React state management patterns"
+        }
+      ],
+      "overallAssessment": {
+        "technical": 85,
+        "communication": 90,
+        "problemSolving": 82,
+        "confidence": 88
+      },
+      "recommendations": [
+        "Practice system design concepts",
+        "Work on more complex algorithmic problems",
+        "Continue building full-stack projects"
+      ]
+    },
+    {
+      "_id": "675f1a2b3c4d5e6f78901235",
+      "candidateName": "Priya Sharma",
+      "role": "Frontend Developer",
+      "interviewType": "Technical Interview",
+      "score": 92,
+      "feedback": "Exceptional React skills, great UI/UX understanding",
+      "createdAt": "2025-12-22",
+      "duration": 50,
+      "questions": [
+        {
+          "question": "How would you optimize a React application's performance?",
+          "answer": "Use React.memo, useMemo, useCallback, code splitting, and lazy loading",
+          "score": 10,
+          "feedback": "Comprehensive understanding of React optimization"
+        },
+        {
+          "question": "Explain CSS Grid vs Flexbox",
+          "answer": "Grid for 2D layouts, Flexbox for 1D layouts. Grid better for complex layouts",
+          "score": 9,
+          "feedback": "Clear understanding of CSS layout systems"
+        }
+      ],
+      "overallAssessment": {
+        "technical": 95,
+        "communication": 88,
+        "problemSolving": 90,
+        "confidence": 92
+      },
+      "recommendations": [
+        "Explore advanced TypeScript patterns",
+        "Learn more about accessibility best practices",
+        "Consider learning backend technologies"
+      ]
+    },
+    {
+      "_id": "675f1a2b3c4d5e6f78901236",
+      "candidateName": "Arjun Patel",
+      "role": "Data Scientist",
+      "interviewType": "Behavioral Interview",
+      "score": 78,
+      "feedback": "Good analytical thinking, needs more confidence in presentation",
+      "createdAt": "2025-12-21",
+      "duration": 40,
+      "questions": [
+        {
+          "question": "Tell me about a challenging data analysis project you worked on",
+          "answer": "Analyzed customer churn data using Python and machine learning models",
+          "score": 8,
+          "feedback": "Good project example with clear methodology"
+        },
+        {
+          "question": "How do you handle missing data in datasets?",
+          "answer": "Depends on the type - imputation, deletion, or using algorithms that handle missing values",
+          "score": 7,
+          "feedback": "Solid understanding but could be more specific"
+        }
+      ],
+      "overallAssessment": {
+        "technical": 80,
+        "communication": 75,
+        "problemSolving": 85,
+        "confidence": 70
+      },
+      "recommendations": [
+        "Practice presenting technical concepts to non-technical audiences",
+        "Work on more end-to-end ML projects",
+        "Improve confidence through mock interviews"
+      ]
+    }
+  ],
+  "job_fit_analyses": [
+    {
+      "_id": "675f1a2b3c4d5e6f78901237",
+      "candidateName": "Shreyas",
+      "targetRole": "Senior Software Engineer",
+      "overallFitScore": 85,
+      "skillMatchPercentage": 80,
+      "experienceMatchPercentage": 90,
+      "recommendation": "Excellent Fit",
+      "confidenceScore": 92,
+      "matchedSkills": ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker"],
+      "missingSkills": ["System Design", "Microservices", "Kubernetes"],
+      "experienceYears": 4.5,
+      "estimatedRole": "Software Engineer",
+      "nextSteps": [
+        "Study system design patterns",
+        "Gain experience with microservices architecture",
+        "Learn container orchestration with Kubernetes"
+      ],
+      "createdAt": "2025-12-23",
+      "resumeAnalysis": {
+        "skills": ["Python", "JavaScript", "React", "Node.js", "MongoDB", "AWS", "Docker", "Git"],
+        "projects": [
+          "E-commerce platform with React and Node.js",
+          "Real-time chat application using WebSocket",
+          "Machine learning model for price prediction"
+        ],
+        "education": ["Bachelor of Technology in Computer Science"],
+        "companies": ["TechStart Inc", "InnovateLab"]
+      }
+    },
+    {
+      "_id": "675f1a2b3c4d5e6f78901238",
+      "candidateName": "Ananya Singh",
+      "targetRole": "Machine Learning Engineer",
+      "overallFitScore": 88,
+      "skillMatchPercentage": 85,
+      "experienceMatchPercentage": 90,
+      "recommendation": "Excellent Fit",
+      "confidenceScore": 95,
+      "matchedSkills": ["Python", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Scikit-learn"],
+      "missingSkills": ["MLOps", "Docker", "Kubernetes"],
+      "experienceYears": 3.0,
+      "estimatedRole": "Data Scientist",
+      "nextSteps": [
+        "Learn MLOps practices and tools",
+        "Gain experience with model deployment",
+        "Study distributed computing frameworks"
+      ],
+      "createdAt": "2025-12-22",
+      "resumeAnalysis": {
+        "skills": ["Python", "TensorFlow", "PyTorch", "Pandas", "NumPy", "Scikit-learn", "SQL", "Jupyter"],
+        "projects": [
+          "Image classification model using CNN",
+          "Natural language processing for sentiment analysis",
+          "Recommendation system using collaborative filtering"
+        ],
+        "education": ["Master of Science in Data Science"],
+        "companies": ["DataCorp", "AI Solutions Ltd"]
+      }
+    }
+  ],
+  "user_profiles": [
+    {
+      "_id": "675f1a2b3c4d5e6f78901239",
+      "name": "Shreyas",
+      "email": "shreyas@example.com",
+      "phone": "+91-9876543210",
+      "location": "Mumbai, India",
+      "currentRole": "Software Engineer",
+      "experienceYears": 4.5,
+      "skills": ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "MongoDB"],
+      "education": {
+        "degree": "Bachelor of Technology",
+        "field": "Computer Science",
+        "institution": "IIT Bombay",
+        "graduationYear": 2020
+      },
+      "preferences": {
+        "targetRoles": ["Senior Software Engineer", "Full Stack Developer", "Tech Lead"],
+        "interviewTypes": ["Technical", "System Design", "Behavioral"],
+        "difficulty": "Intermediate"
+      },
+      "statistics": {
+        "totalInterviews": 12,
+        "averageScore": 84,
+        "bestScore": 92,
+        "improvementRate": 15,
+        "lastInterviewDate": "2025-12-23"
+      },
+      "createdAt": "2025-11-15",
+      "updatedAt": "2025-12-23"
+    },
+    {
+      "_id": "675f1a2b3c4d5e6f7890123a",
+      "name": "Priya Sharma",
+      "email": "priya.sharma@example.com",
+      "phone": "+91-9876543211",
+      "location": "Bangalore, India",
+      "currentRole": "Frontend Developer",
+      "experienceYears": 2.5,
+      "skills": ["JavaScript", "TypeScript", "React", "Vue.js", "CSS", "HTML", "Figma"],
+      "education": {
+        "degree": "Bachelor of Engineering",
+        "field": "Information Technology",
+        "institution": "BITS Pilani",
+        "graduationYear": 2022
+      },
+      "preferences": {
+        "targetRoles": ["Senior Frontend Developer", "UI/UX Developer", "Full Stack Developer"],
+        "interviewTypes": ["Technical", "UI/UX Design", "Behavioral"],
+        "difficulty": "Intermediate"
+      },
+      "statistics": {
+        "totalInterviews": 8,
+        "averageScore": 88,
+        "bestScore": 95,
+        "improvementRate": 22,
+        "lastInterviewDate": "2025-12-22"
+      },
+      "createdAt": "2025-10-20",
+      "updatedAt": "2025-12-22"
+    }
+  ],
+  "aptitude_assessments": [
+    {
+      "_id": "675f1a2b3c4d5e6f7890123b",
+      "candidateName": "Shreyas",
+      "assessmentType": "Logical Reasoning",
+      "totalQuestions": 20,
+      "correctAnswers": 17,
+      "score": 85,
+      "timeSpent": 25,
+      "difficulty": "Medium",
+      "categories": {
+        "patternRecognition": {
+          "score": 90,
+          "questionsAttempted": 5,
+          "correctAnswers": 4
+        },
+        "logicalSequence": {
+          "score": 80,
+          "questionsAttempted": 5,
+          "correctAnswers": 4
+        },
+        "analyticalReasoning": {
+          "score": 85,
+          "questionsAttempted": 5,
+          "correctAnswers": 4
+        },
+        "quantitativeAptitude": {
+          "score": 85,
+          "questionsAttempted": 5,
+          "correctAnswers": 5
+        }
+      },
+      "strengths": ["Pattern Recognition", "Quantitative Analysis"],
+      "improvements": ["Logical Sequence", "Time Management"],
+      "createdAt": "2025-12-20"
+    }
+  ],
+  "resume_analyses": [
+    {
+      "_id": "675f1a2b3c4d5e6f7890123c",
+      "candidateName": "Shreyas",
+      "fileName": "shreyas_resume.pdf",
+      "uploadDate": "2025-12-23",
+      "extractedData": {
+        "skills": ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "MongoDB", "Git"],
+        "experienceYears": 4.5,
+        "experienceLevel": "Mid-Level",
+        "estimatedRole": "Software Engineer",
+        "companies": ["TechStart Inc", "InnovateLab", "CodeCraft Solutions"],
+        "positions": ["Software Engineer", "Junior Developer", "Full Stack Developer"],
+        "projects": [
+          "E-commerce platform with React and Node.js - Built scalable web application",
+          "Real-time chat application using WebSocket - Implemented real-time messaging",
+          "Machine learning model for price prediction - Developed ML model using Python"
+        ],
+        "education": [
+          "Bachelor of Technology in Computer Science - IIT Bombay (2016-2020)",
+          "Higher Secondary Certificate - Science Stream (2014-2016)"
+        ]
+      },
+      "validationResults": {
+        "isValid": true,
+        "missingFields": [],
+        "completenessScore": 95
+      },
+      "aiInsights": {
+        "strengthAreas": ["Technical Skills", "Project Experience", "Education Background"],
+        "improvementAreas": ["Leadership Experience", "Certifications"],
+        "roleRecommendations": ["Senior Software Engineer", "Full Stack Developer", "Tech Lead"]
+      }
+    }
+  ],
+  "system_analytics": [
+    {
+      "_id": "675f1a2b3c4d5e6f7890123d",
+      "date": "2025-12-23",
+      "metrics": {
+        "totalUsers": 1247,
+        "activeUsers": 89,
+        "interviewsCompleted": 156,
+        "jobFitAnalyses": 203,
+        "aptitudeTests": 78,
+        "averageScore": 82.5,
+        "aiEngineUsage": {
+          "ollama": 145,
+          "gemini": 12,
+          "fallbackCount": 3
+        }
+      },
+      "popularRoles": [
+        {"role": "Software Engineer", "count": 45},
+        {"role": "Data Scientist", "count": 32},
+        {"role": "Frontend Developer", "count": 28},
+        {"role": "Backend Developer", "count": 25},
+        {"role": "Full Stack Developer", "count": 23}
+      ],
+      "performanceMetrics": {
+        "averageResponseTime": 2.3,
+        "systemUptime": 99.8,
+        "errorRate": 0.2
+      }
+    }
+  ]
+}

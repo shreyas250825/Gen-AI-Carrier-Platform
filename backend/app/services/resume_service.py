@@ -261,30 +261,35 @@ class ResumeService:
         return unique_skills[:20]  # Return top 20 skills
     
     def _extract_experience(self, text: str) -> Dict[str, Any]:
-        """Extract experience information using advanced date parsing"""
-        years_experience = 1.0  # Default to 12 months (1 year) instead of 0
+        """Extract experience information using conservative parsing"""
+        years_experience = 0  # Start with 0, will set default later if nothing found
         companies = []
         positions = []
         text_lower = text.lower()
         
-        # Method 1: Look for explicit years of experience
+        # Method 1: Look for explicit years of experience ONLY
+        # These patterns specifically look for experience statements
         experience_patterns = [
-            r'(\d+)\s*(?:years?|yrs?)\s*(?:of)?\s*experience',
-            r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:in|of)',
+            r'(\d+)\s*(?:years?|yrs?)\s*(?:of)?\s*(?:work\s*)?experience',
+            r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:of)?\s*(?:professional\s*)?experience',
             r'experience[:\s]+(\d+)\s*(?:years?|yrs?)',
+            r'(\d+)\s*(?:years?|yrs?)\s*in\s*(?:the\s*)?(?:industry|field|software|development)',
         ]
         
         # Also look for months and convert to years
         month_patterns = [
-            r'(\d+)\s*(?:months?|mos?)\s*(?:of)?\s*experience',
-            r'(\d+)\+?\s*(?:months?|mos?)\s*(?:in|of)',
+            r'(\d+)\s*(?:months?|mos?)\s*(?:of)?\s*(?:work\s*)?experience',
+            r'(\d+)\+?\s*(?:months?|mos?)\s*(?:of)?\s*(?:professional\s*)?experience',
             r'experience[:\s]+(\d+)\s*(?:months?|mos?)',
         ]
+        
+        found_explicit_experience = False
         
         for pattern in experience_patterns:
             match = re.search(pattern, text_lower)
             if match:
                 years_experience = max(years_experience, int(match.group(1)))
+                found_explicit_experience = True
         
         # Handle months separately and convert to years
         for pattern in month_patterns:
@@ -293,77 +298,104 @@ class ResumeService:
                 months = int(match.group(1))
                 years_from_months = months / 12.0
                 years_experience = max(years_experience, years_from_months)
+                found_explicit_experience = True
         
-        # Method 2: Calculate from employment dates
-        # Look for date patterns like "Jan 2020 - Present" or "2020-2023"
-        date_patterns = [
-            r'(\w+\s+\d{4}|\d{4})\s*[-–—]\s*(present|current|now|\w+\s+\d{4}|\d{4})',
-            r'(\d{1,2}[/-]\d{4})\s*[-–—]\s*(present|current|now|\d{1,2}[/-]\d{4})',
-        ]
+        # Method 2: CONSERVATIVE date parsing - only in work/experience sections
+        # Look for date patterns ONLY in work experience context
+        work_experience_section = False
+        work_experience_text = ""
         
-        from datetime import datetime
-        current_year = datetime.now().year
-        employment_periods = []
+        lines = text.split('\n')
+        for i, line in enumerate(lines):
+            line_lower = line.lower().strip()
+            
+            # Detect work experience section
+            if any(keyword in line_lower for keyword in ['work experience', 'professional experience', 'employment', 'career history']):
+                if len(line.strip()) < 50:  # Likely a section header
+                    work_experience_section = True
+                    continue
+            
+            # End of work experience section
+            if work_experience_section and any(end_marker in line_lower for end_marker in ['education', 'skills', 'projects', 'certifications', 'awards']):
+                work_experience_section = False
+                continue
+            
+            # Collect work experience text
+            if work_experience_section and line.strip():
+                work_experience_text += " " + line
         
-        for pattern in date_patterns:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
-            for match in matches:
-                start_str = match.group(1).strip()
-                end_str = match.group(2).strip().lower()
-                
-                # Parse start date
-                start_year = None
-                try:
-                    if len(start_str) == 4:  # Just year
-                        start_year = int(start_str)
-                    elif '/' in start_str:
-                        parts = start_str.split('/')
-                        start_year = int(parts[-1]) if len(parts[-1]) == 4 else int(parts[1])
-                    else:
-                        # Try to extract year
-                        year_match = re.search(r'\d{4}', start_str)
-                        if year_match:
-                            start_year = int(year_match.group())
-                except:
-                    pass
-                
-                # Parse end date
-                end_year = current_year
-                if end_str not in ['present', 'current', 'now']:
+        # Only parse dates from work experience section if we found one
+        if work_experience_text:
+            date_patterns = [
+                r'(\w+\s+\d{4}|\d{4})\s*[-–—]\s*(present|current|now|\w+\s+\d{4}|\d{4})',
+                r'(\d{1,2}[/-]\d{4})\s*[-–—]\s*(present|current|now|\d{1,2}[/-]\d{4})',
+            ]
+            
+            from datetime import datetime
+            current_year = datetime.now().year
+            employment_periods = []
+            
+            for pattern in date_patterns:
+                matches = re.finditer(pattern, work_experience_text, re.IGNORECASE)
+                for match in matches:
+                    start_str = match.group(1).strip()
+                    end_str = match.group(2).strip().lower()
+                    
+                    # Parse start date
+                    start_year = None
                     try:
-                        if len(end_str) == 4:
-                            end_year = int(end_str)
-                        elif '/' in end_str:
-                            parts = end_str.split('/')
-                            end_year = int(parts[-1]) if len(parts[-1]) == 4 else int(parts[1])
+                        if len(start_str) == 4:  # Just year
+                            start_year = int(start_str)
+                        elif '/' in start_str:
+                            parts = start_str.split('/')
+                            start_year = int(parts[-1]) if len(parts[-1]) == 4 else int(parts[1])
                         else:
-                            year_match = re.search(r'\d{4}', end_str)
+                            # Try to extract year
+                            year_match = re.search(r'\d{4}', start_str)
                             if year_match:
-                                end_year = int(year_match.group())
+                                start_year = int(year_match.group())
                     except:
                         pass
+                    
+                    # Parse end date
+                    end_year = current_year
+                    if end_str not in ['present', 'current', 'now']:
+                        try:
+                            if len(end_str) == 4:
+                                end_year = int(end_str)
+                            elif '/' in end_str:
+                                parts = end_str.split('/')
+                                end_year = int(parts[-1]) if len(parts[-1]) == 4 else int(parts[1])
+                            else:
+                                year_match = re.search(r'\d{4}', end_str)
+                                if year_match:
+                                    end_year = int(year_match.group())
+                        except:
+                            pass
+                    
+                    # Only accept reasonable date ranges (not too old, not future)
+                    if start_year and start_year >= 1990 and start_year <= current_year and end_year >= start_year:
+                        employment_periods.append((start_year, end_year))
+            
+            # Calculate total years from employment periods
+            if employment_periods:
+                # Merge overlapping periods
+                sorted_periods = sorted(employment_periods)
+                merged = []
+                for start, end in sorted_periods:
+                    if not merged or start > merged[-1][1]:
+                        merged.append([start, end])
+                    else:
+                        merged[-1][1] = max(merged[-1][1], end)
                 
-                if start_year and start_year <= current_year:
-                    employment_periods.append((start_year, end_year))
-        
-        # Calculate total years from employment periods
-        if employment_periods:
-            # Merge overlapping periods
-            sorted_periods = sorted(employment_periods)
-            merged = []
-            for start, end in sorted_periods:
-                if not merged or start > merged[-1][1]:
-                    merged.append([start, end])
-                else:
-                    merged[-1][1] = max(merged[-1][1], end)
-            
-            # Calculate total years (not months)
-            total_years = 0
-            for start, end in merged:
-                total_years += (end - start)
-            
-            calculated_years = total_years
-            years_experience = max(years_experience, calculated_years)
+                # Calculate total years
+                total_years = 0
+                for start, end in merged:
+                    total_years += (end - start)
+                
+                calculated_years = total_years
+                years_experience = max(years_experience, calculated_years)
+                found_explicit_experience = True
         
         # Extract company names (look for common patterns)
         company_patterns = [
@@ -390,6 +422,10 @@ class ResumeService:
                 title = match.group(0).strip()
                 if len(title) > 3 and len(title) < 60:
                     positions.append(title)
+        
+        # If no explicit experience was found, default to 1 year (12 months)
+        if not found_explicit_experience and years_experience == 0:
+            years_experience = 1.0
         
         return {
             "years_experience": years_experience,
