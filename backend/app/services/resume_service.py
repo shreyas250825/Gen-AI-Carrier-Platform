@@ -79,37 +79,122 @@ class ResumeService:
     
     def _extract_skills(self, text: str) -> List[str]:
         """Extract skills from resume text using advanced techniques"""
-        # Comprehensive skill database
+        # Comprehensive skill database with more keywords
         skill_keywords = {
             # Programming Languages
             'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'c', 'go', 'rust', 'kotlin', 
             'swift', 'php', 'ruby', 'scala', 'r', 'matlab', 'perl', 'shell', 'bash', 'powershell',
-            # Web Technologies
-            'react', 'angular', 'vue', 'next.js', 'nuxt', 'svelte', 'ember', 'jquery', 'html', 'css',
-            'sass', 'scss', 'less', 'webpack', 'vite', 'babel', 'es6', 'typescript', 'jsx',
-            # Backend Frameworks
-            'node.js', 'express', 'nestjs', 'django', 'flask', 'fastapi', 'spring', 'spring boot',
-            'laravel', 'symfony', 'rails', 'asp.net', 'dotnet', '.net', 'gin', 'echo',
-            # Databases
+            'dart', 'elixir', 'haskell', 'clojure', 'f#', 'vb.net', 'objective-c', 'assembly',
+            
+            # Web Technologies - Frontend
+            'react', 'angular', 'vue', 'vue.js', 'next.js', 'nuxt', 'svelte', 'ember', 'jquery', 
+            'html', 'html5', 'css', 'css3', 'sass', 'scss', 'less', 'stylus', 'webpack', 'vite', 
+            'babel', 'es6', 'es2015', 'jsx', 'tsx', 'bootstrap', 'tailwind', 'material-ui', 'mui',
+            'redux', 'mobx', 'vuex', 'pinia', 'rxjs', 'lodash', 'moment.js', 'axios', 'fetch',
+            
+            # Backend Frameworks & Technologies
+            'node.js', 'express', 'nestjs', 'koa', 'fastify', 'django', 'flask', 'fastapi', 
+            'spring', 'spring boot', 'laravel', 'symfony', 'codeigniter', 'rails', 'sinatra',
+            'asp.net', 'dotnet', '.net', '.net core', 'gin', 'echo', 'fiber', 'actix', 'rocket',
+            
+            # Databases & Data Storage
             'sql', 'mysql', 'postgresql', 'postgres', 'mongodb', 'redis', 'cassandra', 'elasticsearch',
-            'dynamodb', 'oracle', 'sqlite', 'mariadb', 'neo4j', 'couchdb', 'firebase',
-            # Cloud & DevOps
-            'aws', 'azure', 'gcp', 'google cloud', 'docker', 'kubernetes', 'k8s', 'terraform',
-            'ansible', 'jenkins', 'ci/cd', 'github actions', 'gitlab ci', 'circleci', 'travis',
-            'nginx', 'apache', 'linux', 'unix', 'bash scripting',
-            # ML/AI
-            'machine learning', 'deep learning', 'neural networks', 'tensorflow', 'pytorch', 'keras',
-            'scikit-learn', 'pandas', 'numpy', 'matplotlib', 'seaborn', 'opencv', 'nltk', 'spacy',
-            'nlp', 'computer vision', 'reinforcement learning', 'xgboost', 'lightgbm',
-            # Data Science
-            'data analysis', 'data science', 'data visualization', 'tableau', 'power bi', 'looker',
-            'qlik', 'excel', 'vba', 'sql', 'spark', 'hadoop', 'hive', 'pig', 'kafka',
-            # Mobile
-            'android', 'ios', 'react native', 'flutter', 'xamarin', 'ionic', 'swift', 'kotlin',
-            # Tools & Others
-            'git', 'svn', 'mercurial', 'jira', 'confluence', 'agile', 'scrum', 'kanban',
-            'microservices', 'rest api', 'graphql', 'grpc', 'soap', 'oauth', 'jwt',
-            'project management', 'leadership', 'communication', 'team collaboration'
+            'dynamodb', 'oracle', 'sqlite', 'mariadb', 'neo4j', 'couchdb', 'firebase', 'firestore',
+            'influxdb', 'clickhouse', 'snowflake', 'bigquery', 'redshift', 'cosmos db', 'aurora',
+            
+            # Cloud Platforms & Services
+            'aws', 'amazon web services', 'azure', 'microsoft azure', 'gcp', 'google cloud', 
+            'google cloud platform', 'heroku', 'vercel', 'netlify', 'digitalocean', 'linode',
+            'ec2', 's3', 'lambda', 'cloudformation', 'cloudwatch', 'rds', 'vpc', 'iam',
+            'azure functions', 'app service', 'cosmos db', 'azure sql', 'blob storage',
+            'compute engine', 'cloud storage', 'cloud functions', 'cloud run', 'bigquery',
+            
+            # DevOps & Infrastructure
+            'docker', 'kubernetes', 'k8s', 'terraform', 'ansible', 'puppet', 'chef', 'vagrant',
+            'jenkins', 'gitlab ci', 'github actions', 'circleci', 'travis ci', 'azure devops',
+            'ci/cd', 'continuous integration', 'continuous deployment', 'nginx', 'apache', 
+            'linux', 'unix', 'ubuntu', 'centos', 'debian', 'bash scripting', 'shell scripting',
+            'helm', 'istio', 'prometheus', 'grafana', 'elk stack', 'logstash', 'kibana',
+            
+            # Machine Learning & AI
+            'machine learning', 'deep learning', 'neural networks', 'artificial intelligence',
+            'tensorflow', 'pytorch', 'keras', 'scikit-learn', 'pandas', 'numpy', 'matplotlib',
+            'seaborn', 'plotly', 'opencv', 'nltk', 'spacy', 'transformers', 'hugging face',
+            'nlp', 'natural language processing', 'computer vision', 'reinforcement learning',
+            'xgboost', 'lightgbm', 'catboost', 'random forest', 'svm', 'linear regression',
+            'logistic regression', 'clustering', 'classification', 'regression', 'ensemble methods',
+            
+            # Data Science & Analytics
+            'data analysis', 'data science', 'data visualization', 'data mining', 'statistics',
+            'statistical analysis', 'tableau', 'power bi', 'looker', 'qlik', 'qlikview', 'qliksense',
+            'excel', 'vba', 'sql', 'spark', 'apache spark', 'hadoop', 'hive', 'pig', 'kafka',
+            'airflow', 'luigi', 'dbt', 'snowflake', 'databricks', 'jupyter', 'r studio',
+            
+            # Mobile Development
+            'android', 'ios', 'react native', 'flutter', 'xamarin', 'ionic', 'cordova', 'phonegap',
+            'swift', 'kotlin', 'objective-c', 'java android', 'android studio', 'xcode',
+            'firebase', 'realm', 'core data', 'sqlite mobile', 'push notifications',
+            
+            # Testing & Quality Assurance
+            'testing', 'unit testing', 'integration testing', 'e2e testing', 'test automation',
+            'jest', 'mocha', 'chai', 'jasmine', 'cypress', 'selenium', 'webdriver', 'puppeteer',
+            'pytest', 'unittest', 'junit', 'testng', 'rspec', 'cucumber', 'postman', 'insomnia',
+            'load testing', 'performance testing', 'stress testing', 'jmeter', 'k6',
+            
+            # Security
+            'cybersecurity', 'information security', 'network security', 'web security',
+            'penetration testing', 'vulnerability assessment', 'owasp', 'ssl', 'tls', 'https',
+            'oauth', 'jwt', 'saml', 'ldap', 'active directory', 'encryption', 'cryptography',
+            'firewall', 'ids', 'ips', 'siem', 'soc', 'incident response', 'forensics',
+            
+            # Project Management & Methodologies
+            'agile', 'scrum', 'kanban', 'waterfall', 'lean', 'six sigma', 'project management',
+            'product management', 'jira', 'confluence', 'trello', 'asana', 'monday.com', 'notion',
+            'pmp', 'prince2', 'safe', 'scaled agile', 'devops', 'gitops', 'devsecops',
+            
+            # Version Control & Collaboration
+            'git', 'github', 'gitlab', 'bitbucket', 'svn', 'mercurial', 'perforce', 'tfs',
+            'version control', 'source control', 'code review', 'pull request', 'merge request',
+            
+            # API & Integration
+            'rest api', 'restful', 'graphql', 'grpc', 'soap', 'websockets', 'microservices',
+            'api design', 'api development', 'api testing', 'postman', 'swagger', 'openapi',
+            'json', 'xml', 'yaml', 'protobuf', 'avro', 'message queues', 'rabbitmq', 'activemq',
+            
+            # Business Intelligence & Analytics
+            'business intelligence', 'bi', 'etl', 'data warehousing', 'olap', 'oltp', 'mdx',
+            'ssas', 'ssis', 'ssrs', 'crystal reports', 'cognos', 'microstrategy', 'pentaho',
+            
+            # Blockchain & Cryptocurrency
+            'blockchain', 'cryptocurrency', 'bitcoin', 'ethereum', 'smart contracts', 'solidity',
+            'web3', 'defi', 'nft', 'dapp', 'hyperledger', 'chaincode', 'truffle', 'ganache',
+            
+            # Game Development
+            'game development', 'unity', 'unreal engine', 'godot', 'game design', 'c# unity',
+            'blueprint', 'game physics', '2d games', '3d games', 'mobile games', 'indie games',
+            
+            # Design & UX/UI
+            'ui design', 'ux design', 'user experience', 'user interface', 'graphic design',
+            'web design', 'figma', 'sketch', 'adobe xd', 'invision', 'zeplin', 'principle',
+            'photoshop', 'illustrator', 'after effects', 'wireframing', 'prototyping',
+            'usability testing', 'user research', 'design thinking', 'design systems',
+            
+            # Soft Skills & Leadership
+            'leadership', 'team management', 'communication', 'problem solving', 'critical thinking',
+            'analytical thinking', 'creativity', 'innovation', 'collaboration', 'teamwork',
+            'mentoring', 'coaching', 'training', 'presentation skills', 'public speaking',
+            'negotiation', 'conflict resolution', 'time management', 'organization',
+            
+            # Industry-Specific
+            'fintech', 'healthtech', 'edtech', 'e-commerce', 'retail', 'banking', 'insurance',
+            'healthcare', 'pharmaceutical', 'automotive', 'aerospace', 'manufacturing',
+            'logistics', 'supply chain', 'telecommunications', 'media', 'entertainment',
+            
+            # Emerging Technologies
+            'artificial intelligence', 'machine learning', 'deep learning', 'computer vision',
+            'natural language processing', 'robotics', 'iot', 'internet of things', 'ar', 'vr',
+            'augmented reality', 'virtual reality', 'mixed reality', 'quantum computing',
+            'edge computing', 'serverless', 'microservices', 'containerization'
         }
         
         found_skills = []
@@ -189,10 +274,25 @@ class ResumeService:
             r'experience[:\s]+(\d+)\s*(?:years?|yrs?)',
         ]
         
+        # Also look for months and convert to years
+        month_patterns = [
+            r'(\d+)\s*(?:months?|mos?)\s*(?:of)?\s*experience',
+            r'(\d+)\+?\s*(?:months?|mos?)\s*(?:in|of)',
+            r'experience[:\s]+(\d+)\s*(?:months?|mos?)',
+        ]
+        
         for pattern in experience_patterns:
             match = re.search(pattern, text_lower)
             if match:
                 years_experience = max(years_experience, int(match.group(1)))
+        
+        # Handle months separately and convert to years
+        for pattern in month_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                months = int(match.group(1))
+                years_from_months = months / 12.0
+                years_experience = max(years_experience, years_from_months)
         
         # Method 2: Calculate from employment dates
         # Look for date patterns like "Jan 2020 - Present" or "2020-2023"
@@ -257,13 +357,13 @@ class ResumeService:
                 else:
                     merged[-1][1] = max(merged[-1][1], end)
             
-            # Calculate total months
-            total_months = 0
+            # Calculate total years (not months)
+            total_years = 0
             for start, end in merged:
-                total_months += (end - start) * 12
+                total_years += (end - start)
             
-            calculated_years = total_months / 12
-            years_experience = max(years_experience, int(calculated_years))
+            calculated_years = total_years
+            years_experience = max(years_experience, calculated_years)
         
         # Extract company names (look for common patterns)
         company_patterns = [

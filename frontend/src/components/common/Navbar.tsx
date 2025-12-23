@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, Mic, BarChart3, Home, Info, User, Menu, X, LogOut, Target, Brain } from 'lucide-react';
+import { Mic, BarChart3, Home, Menu, X, Target, Brain } from 'lucide-react';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState<string>('');
   
   // Set active link based on current path
   const getActiveLink = () => {
@@ -19,7 +17,7 @@ const Navbar = () => {
     if (path.startsWith('/reports') || path.startsWith('/report')) return 'reports';
     if (path.startsWith('/job-fit')) return 'jobfit';
     if (path.startsWith('/aptitude')) return 'aptitude';
-    if (path.startsWith('/about')) return 'about';
+    // if (path.startsWith('/about')) return 'about';
     return '';
   };
   
@@ -29,284 +27,116 @@ const Navbar = () => {
   useEffect(() => {
     setActiveLink(getActiveLink());
   }, [location.pathname]);
-  
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = () => {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          setIsAuthenticated(user.isAuthenticated === true);
-          setUserName(user.name || user.email || 'User');
-        } catch (e) {
-          setIsAuthenticated(false);
-          setUserName('');
-        }
-      } else {
-        setIsAuthenticated(false);
-        setUserName('');
-      }
-    };
-    
-    checkAuth();
-    
-    // Listen for storage changes (e.g., when user logs in from another tab)
-    window.addEventListener('storage', checkAuth);
-    // Listen for custom auth change events (same tab)
-    window.addEventListener('authChange', checkAuth);
-    // Also check on focus
-    window.addEventListener('focus', checkAuth);
-    
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-      window.removeEventListener('authChange', checkAuth);
-      window.removeEventListener('focus', checkAuth);
-    };
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 40);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLogout = () => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        user.isAuthenticated = false;
-        localStorage.setItem('user', JSON.stringify(user));
-      } catch (e) {
-        localStorage.removeItem('user');
-      }
-    } else {
-      localStorage.removeItem('user');
-    }
-    setIsAuthenticated(false);
-    setUserName('');
-    // Trigger auth change event for Navbar update
-    window.dispatchEvent(new Event('authChange'));
-    navigate('/signin');
-  };
-
   const navLinks = [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'interview', label: 'Start Interview', icon: Mic, href: '/setup' },
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/dashboard', protected: true },
-    { id: 'aptitude', label: 'Aptitude', icon: Brain, href: '/aptitude', protected: true },
-    { id: 'jobfit', label: 'Job Fit', icon: Target, href: '/job-fit', protected: true },
-    { id: 'reports', label: 'Report', icon: BarChart3, href: '/reports', protected: true },
-    { id: 'about', label: 'About', icon: Info, href: '/about' }
-  ].filter(link => !link.protected || isAuthenticated);
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/dashboard' },
+    { id: 'aptitude', label: 'Aptitude', icon: Brain, href: '/aptitude' },
+    { id: 'jobfit', label: 'Job Fit', icon: Target, href: '/job-fit' },
+    { id: 'reports', label: 'Report', icon: BarChart3, href: '/reports' },
+    // { id: 'about', label: 'About', icon: Info, href: '/about' }
+  ];
 
   return (
     <>
       {/* Navbar */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 ${
-        scrolled
-          ? 'backdrop-blur-2xl shadow-2xl border-b border-white/10'
-          : ''
-      }`}>
-
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            {/* Logo */}
-            <div onClick={() => navigate('/')} className="flex items-center space-x-3 group cursor-pointer">
-              <div className="relative">
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-sky-500 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition-all duration-300 animate-pulse"></div>
-                {/* Icon Container */}
-                <div className="relative bg-gradient-to-br from-sky-400 to-sky-500 p-2.5 rounded-xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-sky-300 to-sky-500 bg-clip-text text-transparent tracking-tight">
-                  Intervize
-                </span>
-                <div className="text-xs text-gray-500 -mt-1">AI Interview Coach</div>
-              </div>
-            </div>
-
-            {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center space-x-2">
-              {navLinks.map((link) => (
-                <button
-                  key={link.id}
-                  onClick={() => navigate(link.href)}
-                  className={`relative px-5 py-2.5 rounded-xl font-medium transition-all duration-300 group ${
-                    activeLink === link.id
-                      ? 'text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {/* Active Background */}
-                  {activeLink === link.id && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-sky-400/20 to-sky-500/20 rounded-xl blur-sm"></div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-sky-400/10 to-sky-500/10 rounded-xl border border-sky-400/30"></div>
-                    </>
-                  )}
-                  
-                  {/* Hover Background */}
-                  <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  {/* Content */}
-                  <span className="relative flex items-center space-x-2">
-                    <link.icon className="w-4 h-4" />
-                    <span>{link.label}</span>
-                  </span>
-                  
-                  {/* Bottom Indicator */}
-                  <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-gradient-to-r from-sky-400 to-sky-500 transition-all duration-300 ${
-                    activeLink === link.id ? 'w-3/4' : 'w-0 group-hover:w-1/2'
-                  }`}></div>
-                </button>
-              ))}
-            </div>
-
-            {/* Right Side - Login/Sign Up or User Profile */}
-            <div className="hidden lg:flex items-center space-x-3">
-              {isAuthenticated ? (
-                <>
-                  {/* User Profile */}
-                  <div className="flex items-center space-x-3 pl-4 border-l border-white/10">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 flex items-center justify-center">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{userName}</p>
-                      <p className="text-xs text-gray-400">Signed in</p>
-                    </div>
-                  </div>
-                  {/* Logout Button */}
-                  <button 
-                    onClick={handleLogout}
-                    className="relative group overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-orange-500 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl font-medium text-white hover:bg-white/10 transition-all duration-300">
-                      <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
-                    </div>
-                  </button>
-                </>
-              ) : (
-                <>
-                  {/* Sign In Button */}
-                  <button 
-                    onClick={() => navigate('/signin')}
-                    className="relative group overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-sky-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl font-medium text-white hover:bg-white/10 transition-all duration-300">
-                      <User className="w-4 h-4" />
-                      <span>Sign In</span>
-                    </div>
-                  </button>
-                  {/* Sign Up Button */}
-                  <button 
-                    onClick={() => navigate('/signup')}
-                    className="relative group overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center space-x-2 bg-gradient-to-r from-sky-500 to-cyan-500 px-6 py-2.5 rounded-xl font-semibold text-white shadow-lg transform group-hover:scale-105 transition-all duration-300">
-                      <span>Sign Up</span>
-                </div>
-              </button>
-                </>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all duration-300"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <div className={`lg:hidden transition-all duration-500 overflow-hidden ${
-          mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+      <header 
+        className={`fixed left-1/2 -translate-x-1/2 z-[9999] transition-all duration-700 ease-in-out ${
+          scrolled ? "top-4 w-[95%] max-w-7xl" : "top-0 w-full"
+        }`}
+      >
+        <nav className={`flex items-center justify-between px-10 py-5 transition-all duration-500 ${
+          scrolled 
+          ? "bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[32px] shadow-2xl" 
+          : "bg-transparent border-b border-white/5"
         }`}>
-          <div className="bg-slate-900/95 backdrop-blur-xl border-t border-white/10 px-6 py-4 space-y-2">
+
+          
+          {/* LEFT: BOLD BRANDING (Fixed Width to prevent layout shifting) */}
+          <div onClick={() => navigate('/')} className="flex items-center gap-4 w-[280px] shrink-0 cursor-pointer group">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-sky-600 shadow-[0_0_20px_rgba(139,92,246,0.5)] animate-[spin_8s_linear_infinite] group-hover:animate-none transition-all duration-300">
+              <span className="text-xs font-black text-white italic -rotate-12">RS</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black tracking-tighter uppercase leading-none bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                ReadySet AI
+              </span>
+              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-[0.3em] mt-1">
+                Interview Coach
+              </span>
+            </div>
+          </div>
+
+          {/* CENTER: NAV LINKS (Centered using flex-grow) */}
+          <div className="hidden lg:flex flex-1 justify-center items-center gap-8">
             {navLinks.map((link) => (
               <button
                 key={link.id}
-                onClick={() => {
-                  setActiveLink(link.id);
-                  setMobileMenuOpen(false);
-                  navigate(link.href);
-                }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
-                  activeLink === link.id
-                    ? 'bg-gradient-to-r from-sky-400/20 to-sky-500/20 text-white border border-sky-400/30'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                onClick={() => navigate(link.href)}
+                className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all relative py-2 px-4 rounded-xl group ${
+                  activeLink === link.id ? "text-purple-400" : "text-slate-400 hover:text-white"
                 }`}
               >
-                <link.icon className="w-5 h-5" />
-                <span>{link.label}</span>
+                <span className="relative flex items-center gap-2">
+                  <link.icon className="w-4 h-4" />
+                  <span>{link.label}</span>
+                </span>
+                {activeLink === link.id && (
+                  <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-full h-[3px] bg-purple-500 shadow-[0_0_20px_#a855f7] rounded-full" />
+                )}
+                {activeLink !== link.id && (
+                  <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-1/2 h-[3px] bg-purple-500 shadow-[0_0_20px_#a855f7] rounded-full transition-all duration-300" />
+                )}
               </button>
             ))}
-            
-            {/* Mobile Auth Buttons */}
-            {isAuthenticated ? (
-              <>
-                <div className="w-full mt-4 p-4 bg-slate-800/50 rounded-xl border border-white/10">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 flex items-center justify-center">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">{userName}</p>
-                      <p className="text-xs text-gray-400">Signed in</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full flex items-center justify-center space-x-2 bg-red-500/20 border border-red-500/30 px-6 py-3 rounded-xl font-semibold text-red-300 hover:bg-red-500/30 transition-all"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="w-full mt-4 space-y-2">
-                <button 
-                  onClick={() => {
-                    navigate('/signin');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-center space-x-2 bg-white/5 border border-white/10 px-6 py-3 rounded-xl font-semibold text-white hover:bg-white/10 transition-all"
-                >
-              <User className="w-5 h-5" />
-                  <span>Sign In</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    navigate('/signup');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-sky-500 to-cyan-500 px-6 py-3 rounded-xl font-semibold text-white shadow-lg"
-                >
-                  <span>Sign Up</span>
-            </button>
-              </div>
-            )}
           </div>
+
+          {/* RIGHT: Mobile Menu Button */}
+          <div className="w-[120px] flex justify-end">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile Menu */}
+      <div className={`fixed top-0 left-0 w-full z-[9998] lg:hidden transition-all duration-500 overflow-hidden ${
+        mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="bg-slate-950/95 backdrop-blur-3xl border-b border-white/10 pt-24 px-6 py-8 space-y-4">
+          {navLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => {
+                setActiveLink(link.id);
+                setMobileMenuOpen(false);
+                navigate(link.href);
+              }}
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all duration-300 ${
+                activeLink === link.id
+                  ? 'bg-gradient-to-r from-purple-600/20 to-sky-600/20 text-purple-400 border border-purple-500/30 shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <link.icon className="w-5 h-5" />
+              <span>{link.label}</span>
+            </button>
+          ))}
         </div>
-      </nav>
+      </div>
 
       {/* Spacer to prevent content from going under fixed navbar */}
       <div className="h-20"></div>

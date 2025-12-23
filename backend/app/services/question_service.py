@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import random
 from app.models.interview import Interview
 from app.constants import QUESTION_BANK, Roles, InterviewType
-from app.ai_engines.cloud_llm_engine import generate_questions
+from app.ai_engines.gemini_engine import GeminiEngine
 
 # Global question service instance
 question_service = None

@@ -9,30 +9,30 @@ const AboutPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white">
+      <div className="min-h-screen bg-[#020617] text-white">
         {/* Animated Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-400/15 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         {/* Hero Section */}
         <section className="relative pt-40 pb-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center space-x-2 bg-sky-400/10 border border-sky-400/30 rounded-full px-4 py-2 mb-8 backdrop-blur-sm">
-              <Sparkles className="w-4 h-4 text-sky-300" />
-              <span className="text-sm text-sky-200">Our Story</span>
+            <div className="inline-flex items-center space-x-2 bg-purple-500/10 border border-purple-500/30 rounded-full px-4 py-2 mb-8 backdrop-blur-sm">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span className="text-sm font-black uppercase tracking-widest text-purple-300">Our Story</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-white via-sky-100 to-cyan-200 bg-clip-text text-transparent">
+            <h1 className="text-6xl md:text-7xl font-black tracking-tighter uppercase mb-6 leading-tight">
+              <span className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
                 Empowering Careers Through
               </span>
               <br />
-              <span className="bg-gradient-to-r from-sky-300 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-purple-500 to-sky-500 bg-clip-text text-transparent">
                 AI Innovation
               </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium">
               We're on a mission to democratize interview preparation and help everyone succeed in their career journey.
             </p>
           </div>

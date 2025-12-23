@@ -38,17 +38,17 @@ const ManualSetup: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-800/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10">
+    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[48px] p-8 md:p-10">
       {step === 'role' ? (
         <>
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(139,92,246,0.5)]">
               <Briefcase className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-300 to-pink-400 bg-clip-text text-transparent">
+            <h2 className="text-6xl font-black tracking-tighter uppercase mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
               Select Your Role
             </h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-slate-400 text-lg font-medium">
               Choose or enter the role you want to interview for
             </p>
       </div>
@@ -56,7 +56,7 @@ const ManualSetup: React.FC = () => {
           <div className="max-w-3xl mx-auto">
             {/* Common Roles Grid */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-300 mb-3">
+              <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">
                 Select from common roles
         </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -67,10 +67,10 @@ const ManualSetup: React.FC = () => {
                       setSelectedRole(role);
                       setCustomRole('');
                     }}
-                    className={`p-3 rounded-xl border-2 transition-all duration-300 text-sm ${
+                    className={`p-4 rounded-2xl border-2 transition-all duration-300 text-sm font-black uppercase tracking-widest ${
                       selectedRole === role && !customRole
-                        ? 'border-sky-400 bg-sky-400/20 text-sky-300'
-                        : 'border-white/10 bg-slate-900/50 text-gray-300 hover:border-white/20 hover:text-white'
+                        ? 'border-purple-500 bg-purple-500/20 text-purple-300 shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+                        : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-purple-500/50 hover:text-white'
                     }`}
                   >
                     {role}
@@ -81,7 +81,7 @@ const ManualSetup: React.FC = () => {
 
             {/* Custom Role Input */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-300 mb-3">
+              <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">
                 Or enter a custom role
         </label>
               <input
@@ -92,7 +92,7 @@ const ManualSetup: React.FC = () => {
                   setSelectedRole('');
                 }}
                 placeholder="e.g., Machine Learning Engineer"
-                className="w-full p-4 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/20 transition-all"
+                className="w-full p-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all font-medium"
               />
       </div>
 
@@ -102,8 +102,8 @@ const ManualSetup: React.FC = () => {
               disabled={!selectedRole && !customRole.trim()}
               className="relative w-full group overflow-hidden mt-6"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              <div className={`relative flex items-center justify-center space-x-3 bg-gradient-to-r from-sky-500 to-cyan-500 py-4 px-8 rounded-xl font-bold text-lg shadow-xl transform transition-all duration-300 ${
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity shadow-[0_0_20px_rgba(139,92,246,0.5)]"></div>
+              <div className={`relative flex items-center justify-center space-x-3 bg-gradient-to-br from-purple-600 to-sky-600 py-4 px-8 rounded-2xl font-black text-lg shadow-xl transform transition-all duration-300 uppercase tracking-widest ${
                 (selectedRole || customRole.trim()) ? 'group-hover:scale-105' : 'opacity-50 cursor-not-allowed'
               }`}>
                 <span>Next: Choose Interview Type & Persona</span>

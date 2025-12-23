@@ -47,25 +47,25 @@ const ProfileSetup: React.FC = () => {
   }, [location.state, location.pathname]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white py-20 px-6">
+    <div className="min-h-screen bg-[#020617] text-white py-20 px-6">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-400/15 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="relative max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-3xl mb-6 transform hover:scale-110 transition-transform duration-300">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(139,92,246,0.5)]">
             <Sparkles className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-white via-sky-100 to-cyan-200 bg-clip-text text-transparent">
+          <h1 className="text-6xl md:text-7xl font-black tracking-tighter uppercase mb-4">
+            <span className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
               Setup Your Interview
             </span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium">
             Choose how you'd like to set up your interview profile
           </p>
         </div>

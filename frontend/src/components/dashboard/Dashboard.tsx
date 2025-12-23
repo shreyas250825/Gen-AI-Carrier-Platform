@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../layout/Layout';
 import { 
-  Video, Brain, Clock, Target, TrendingUp,
-  Calendar, PlayCircle, BookOpen, Trophy, Zap, CheckCircle,
-  Star, ArrowRight, Plus, History, ChevronRight, Activity, FileText
+  Video, Brain, Clock, Target, TrendingUp, Trophy, 
+  Calendar, PlayCircle, ArrowRight, History, BarChart3, Users
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -118,36 +117,6 @@ const Dashboard = () => {
     status: "completed"
   }));
 
-  const upcomingGoals = [
-    { id: 1, title: "Complete 5 technical interviews", progress: Math.min(100, Math.round((userStats.totalInterviews / 5) * 100)), icon: Target },
-    { id: 2, title: "Improve confidence score to 90+", progress: Math.min(100, Math.round((userStats.averageScore / 90) * 100)), icon: TrendingUp },
-    { id: 3, title: "Practice 10 behavioral questions", progress: Math.min(100, Math.round((userStats.totalInterviews / 10) * 100)), icon: Brain }
-  ];
-
-  const recommendations = [
-    {
-      id: 1,
-      title: "System Design Fundamentals",
-      description: "Based on your recent interviews, focus on distributed systems",
-      icon: BookOpen,
-      gradient: "from-sky-400 to-cyan-400"
-    },
-    {
-      id: 2,
-      title: "Confidence Building",
-      description: "Practice speaking more assertively in your responses",
-      icon: Zap,
-      gradient: "from-purple-500 to-pink-500"
-    },
-    {
-      id: 3,
-      title: "STAR Method Practice",
-      description: "Improve your behavioral interview answer structure",
-      icon: Star,
-      gradient: "from-orange-500 to-yellow-500"
-    }
-  ];
-
   const handleStartInterview = (interviewType?: string) => {
     if (interviewType) {
       // Store interview type preference
@@ -166,265 +135,262 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white">
+      <div className="min-h-screen bg-[#020617] text-white overflow-x-hidden">
         {/* Animated Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-purple-600/10 blur-[150px] rounded-full animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-emerald-400/10 blur-[150px] rounded-full animate-pulse delay-1000"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 py-8">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Welcome back, {userName}! 👋</h2>
-            <p className="text-gray-400">Here's your interview preparation progress</p>
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20 px-6 text-center">
+          <div className="max-w-6xl mx-auto">
+            <div className="inline-block px-4 py-1.5 rounded-full border border-purple-500/20 bg-purple-500/5 text-purple-400 text-[9px] font-black uppercase tracking-[0.4em] mb-6">
+              Ready Score Dashboard · {userName}
+            </div>
+            
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.8] uppercase text-white mb-6">
+              YOUR <br/> 
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-white to-emerald-400">
+                PROGRESS.
+              </span>
+            </h1>
+            
+            <p className="max-w-2xl mx-auto text-lg text-slate-400 font-medium leading-relaxed mb-10">
+              Track your interview readiness, analyze performance patterns, and accelerate your career growth.
+            </p>
+            
+            <button 
+              onClick={() => handleStartInterview()}
+              className="px-12 py-5 bg-white text-black font-black rounded-2xl hover:scale-105 transition-all shadow-[0_0_50px_rgba(255,255,255,0.3)] uppercase text-[10px] tracking-widest"
+            >
+              Start New Session
+            </button>
           </div>
+        </section>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Section */}
+        <section className="max-w-7xl mx-auto px-6 mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">Performance <span className="text-purple-500 italic">Metrics.</span></h2>
+            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">Real-Time Intelligence Dashboard</p>
+          </div>
+          
+          <div className="grid md:grid-cols-4 gap-8">
             {[
               { 
-                label: "Total Interviews", 
+                label: "Sessions", 
                 value: userStats.totalInterviews, 
                 icon: Video, 
-                gradient: "from-sky-400 to-cyan-400",
-                change: interviewHistory.length > 0 ? `${interviewHistory.length} total` : "Start your first interview"
+                color: "text-emerald-500",
+                desc: "Total Practice Sessions"
               },
               { 
-                label: "Average Score", 
-                value: userStats.averageScore > 0 ? `${userStats.averageScore}%` : "N/A", 
+                label: "Ready Score", 
+                value: userStats.averageScore > 0 ? `${userStats.averageScore}%` : "0%", 
                 icon: Trophy, 
-                gradient: "from-purple-500 to-pink-500",
-                change: userStats.improvementRate > 0 ? `+${userStats.improvementRate}% improvement` : "No data yet"
+                color: "text-purple-500",
+                desc: "Average Performance"
               },
               { 
-                label: "Improvement Rate", 
-                value: `${userStats.improvementRate > 0 ? userStats.improvementRate : 0}%`, 
+                label: "Growth Rate", 
+                value: `+${userStats.improvementRate}%`, 
                 icon: TrendingUp, 
-                gradient: "from-orange-500 to-yellow-500",
-                change: "Last 30 days"
+                color: "text-blue-500",
+                desc: "Improvement Trajectory"
               },
               { 
-                label: "Hours Practiced", 
+                label: "Hours", 
                 value: userStats.hoursSpent, 
                 icon: Clock, 
-                gradient: "from-blue-400 to-purple-500",
-                change: "This month"
+                color: "text-orange-500",
+                desc: "Practice Time Invested"
               }
             ].map((stat, index) => (
-              <div key={index} className="relative group">
-                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-all duration-500`}></div>
-                <div className="relative bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6 transform group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 bg-gradient-to-r ${stat.gradient} rounded-xl`}>
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-xs text-sky-300 bg-sky-400/10 px-2 py-1 rounded-full">
-                      {stat.change}
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold mb-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
+              <div key={index} className="glass-panel p-12 rounded-[48px] hover:border-purple-500/40 transition-all group text-center">
+                <div className={`mb-8 group-hover:scale-110 transition-transform ${stat.color}`}>
+                  <stat.icon size={48} />
                 </div>
+                <div className="text-4xl font-black uppercase mb-2 tracking-tighter text-white">
+                  {stat.value}
+                </div>
+                <h3 className="text-sm font-black uppercase mb-2 tracking-widest text-white">{stat.label}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{stat.desc}</p>
               </div>
             ))}
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Start New Interview */}
-            <div className="lg:col-span-2">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-400/30 to-cyan-500/30 rounded-2xl blur-2xl opacity-50 group-hover:opacity-75 transition-all duration-500"></div>
-                <div className="relative bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-8 overflow-hidden">
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <h3 className="text-2xl font-bold mb-2">Start New Interview</h3>
-                        <p className="text-gray-400">Choose your interview type and begin practicing</p>
-                      </div>
-                      <div className="p-3 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-xl">
-                        <PlayCircle className="w-6 h-6" />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                      {[
-                        { name: "Technical", icon: Brain, color: "from-sky-400 to-cyan-400", type: "technical" },
-                        { name: "Behavioral", icon: Target, color: "from-purple-500 to-pink-500", type: "behavioral" },
-                        { name: "Aptitude Test", icon: BookOpen, color: "from-orange-500 to-yellow-500", type: "aptitude", route: "/aptitude" },
-                        { name: "Job Fit Analysis", icon: Activity, color: "from-blue-400 to-purple-500", type: "job_fit", route: "/job-fit" }
-                      ].map((type, i) => (
-                        <button
-                          key={i}
-                          onClick={() => type.route ? navigate(type.route) : handleStartInterview(type.type)}
-                          className="group/btn relative"
-                        >
-                          <div className={`absolute inset-0 bg-gradient-to-r ${type.color} rounded-xl blur opacity-0 group-hover/btn:opacity-50 transition-all duration-300`}></div>
-                          <div className="relative flex items-center space-x-3 bg-slate-700/30 border border-white/10 px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300">
-                            <div className={`p-2 bg-gradient-to-r ${type.color} rounded-lg`}>
-                              <type.icon className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="font-medium">{type.name}</span>
-                            <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                          </div>
-                        </button>
-                      ))}
-                    
-                    <button 
-                      onClick={() => handleStartInterview()}
-                      className="w-full relative group/main"
+        {/* Action Center */}
+        <section className="max-w-7xl mx-auto px-6 mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">Action <span className="text-emerald-400 italic">Center.</span></h2>
+            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">Launch Your Next Session</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { 
+                name: "Technical Interview", 
+                desc: "Algorithm challenges and system design deep-dives.", 
+                icon: Brain, 
+                color: "text-red-500",
+                type: "technical"
+              },
+              { 
+                name: "Behavioral Round", 
+                desc: "Leadership scenarios and culture-fit assessments.", 
+                icon: Users, 
+                color: "text-emerald-500",
+                type: "behavioral"
+              },
+              { 
+                name: "Aptitude Test", 
+                desc: "Cognitive ability and logical reasoning evaluation.", 
+                icon: Target, 
+                color: "text-purple-500",
+                route: "/aptitude"
+              },
+              { 
+                name: "Job Fit Analysis", 
+                desc: "Role compatibility and skill gap identification.", 
+                icon: BarChart3, 
+                color: "text-blue-500",
+                route: "/job-fit"
+              }
+            ].map((action, index) => (
+              <button
+                key={index}
+                onClick={() => action.route ? navigate(action.route) : handleStartInterview(action.type)}
+                className="glass-panel p-12 rounded-[48px] hover:border-purple-500/40 transition-all group text-left"
+              >
+                <div className={`mb-8 group-hover:scale-110 transition-transform ${action.color}`}>
+                  <action.icon size={32} />
+                </div>
+                <h3 className="text-sm font-black uppercase mb-4 tracking-widest text-white">{action.name}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{action.desc}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Recent Activity */}
+        <section className="max-w-7xl mx-auto px-6 mb-20">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">
+                  RECENT <br/><span className="text-purple-500">ACTIVITY.</span>
+                </h2>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Your latest interview sessions and performance insights.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                {recentInterviews.length > 0 ? (
+                  recentInterviews.map((interview) => (
+                    <button
+                      key={interview.id}
+                      onClick={() => handleViewReport(interview.id)}
+                      className="w-full p-6 border border-white/5 bg-white/5 rounded-3xl hover:border-purple-500/40 transition-all text-left group"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-xl blur opacity-75 group-hover/main:opacity-100 transition-opacity"></div>
-                      <div className="relative flex items-center justify-center space-x-3 bg-gradient-to-r from-sky-500 to-cyan-500 px-6 py-3 rounded-xl font-semibold transform group-hover/main:scale-105 transition-all duration-300">
-                        <Plus className="w-5 h-5" />
-                        <span>Start Practice Session</span>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-sm font-black uppercase tracking-widest text-white group-hover:text-purple-400 transition-colors">
+                            {interview.type}
+                          </p>
+                          <p className="text-xs text-slate-500">{interview.role}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-black text-white">{interview.score || 'N/A'}</p>
+                          <p className="text-[10px] uppercase text-slate-500 font-bold tracking-[0.2em]">Score</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span className="flex items-center">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {interview.date}
+                        </span>
+                        <span className="flex items-center">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {interview.duration}
+                        </span>
+                        <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </button>
+                  ))
+                ) : (
+                  <div className="p-8 border border-white/5 bg-white/5 rounded-3xl text-center">
+                    <History className="w-12 h-12 mx-auto mb-4 text-slate-500 opacity-50" />
+                    <p className="text-sm text-slate-400 mb-2">No sessions yet</p>
+                    <p className="text-xs text-slate-500">Start your first interview to see activity here</p>
                   </div>
-                </div>
+                )}
               </div>
+              
+              {recentInterviews.length > 0 && (
+                <button
+                  onClick={() => navigate('/reports')}
+                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  <span>View All Sessions</span>
+                  <ArrowRight size={12} />
+                </button>
+              )}
             </div>
-
-            {/* Goals Progress */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-2xl blur-2xl opacity-50 group-hover:opacity-75 transition-all duration-500"></div>
-              <div className="relative bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <Target className="w-5 h-5 mr-2 text-sky-300" />
-                  Your Goals
-                </h3>
-                <div className="space-y-4">
-                  {upcomingGoals.map((goal) => (
-                    <div key={goal.id} className="group/goal">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-300 group-hover/goal:text-white transition-colors">
-                          {goal.title}
-                        </span>
-                        <span className="text-xs font-semibold text-sky-300">{goal.progress}%</span>
-                      </div>
-                      <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-sky-400 to-cyan-500 rounded-full transition-all duration-500"
-                          style={{ width: `${goal.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+            
+            <div className="glass-panel p-16 rounded-[60px] border border-white/10 bg-white/[0.02] flex items-center justify-center backdrop-blur-3xl">
+              <div className="text-center space-y-6">
+                <div className="w-32 h-32 bg-purple-600/20 blur-[80px] animate-pulse mx-auto" />
+                <div className="space-y-2">
+                  <p className="font-mono text-[10px] text-purple-400 uppercase tracking-[0.5em]">AI Intelligence Active</p>
+                  <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+                    Continuous performance analysis and personalized recommendations powered by advanced ML algorithms.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Recent Interviews & Recommendations */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Recent Interviews */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-sky-400/20 to-cyan-500/20 rounded-2xl blur-2xl opacity-50 group-hover:opacity-75 transition-all duration-500"></div>
-              <div className="relative bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold flex items-center">
-                    <History className="w-5 h-5 mr-2 text-sky-300" />
-                    Recent Interviews
-                  </h3>
-                  <button 
-                    onClick={() => navigate('/reports')}
-                    className="text-sm text-sky-300 hover:text-sky-200 flex items-center transition-colors"
-                  >
-                    View All <ArrowRight className="w-4 h-4 ml-1" />
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {recentInterviews.length > 0 ? (
-                    recentInterviews.map((interview) => (
-                      <div 
-                        key={interview.id}
-                        onClick={() => handleViewReport(interview.id)}
-                        className="group/item relative cursor-pointer"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-sky-400/20 to-cyan-500/20 rounded-xl blur opacity-0 group-hover/item:opacity-100 transition-all duration-300"></div>
-                        <div className="relative bg-slate-700/30 border border-white/10 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-300">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h4 className="font-semibold text-white group-hover/item:text-sky-300 transition-colors">
-                                {interview.type}
-                              </h4>
-                              <p className="text-sm text-gray-400">{interview.role}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-bold bg-gradient-to-r from-sky-300 to-cyan-400 bg-clip-text text-transparent">
-                                {interview.score || 'N/A'}
-                              </div>
-                              <div className="text-xs text-gray-400">Score</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-xs text-gray-400 mt-3 pt-3 border-t border-white/10">
-                            <span className="flex items-center">
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {interview.date}
-                            </span>
-                            <span className="flex items-center">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {interview.duration}
-                            </span>
-                            <span className="flex items-center text-sky-300">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Completed
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-400">
-                      <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No interviews yet</p>
-                      <p className="text-sm mt-2">Start your first interview to see it here!</p>
-                    </div>
-                  )}
-                </div>
+        {/* Quick Actions */}
+        <section className="max-w-7xl mx-auto px-6 py-20 border-t border-white/5">
+          <div className="grid md:grid-cols-3 gap-8">
+            <button
+              onClick={() => navigate('/reports')}
+              className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group"
+            >
+              <BarChart3 className="text-purple-500 group-hover:scale-110 transition-transform" size={24} />
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white">Performance Analytics</p>
+                <p className="text-xs text-slate-500">Detailed session reports</p>
               </div>
-            </div>
-
-            {/* Personalized Recommendations */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-2xl blur-2xl opacity-50 group-hover:opacity-75 transition-all duration-500"></div>
-              <div className="relative bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                <h3 className="text-xl font-bold mb-6 flex items-center">
-                  <Zap className="w-5 h-5 mr-2 text-sky-300" />
-                  Recommendations
-                </h3>
-                <div className="space-y-4">
-                  {recommendations.map((rec) => (
-                    <div 
-                      key={rec.id} 
-                      onClick={() => handleStartInterview()}
-                      className="group/rec relative cursor-pointer"
-                    >
-                      <div className={`absolute inset-0 bg-gradient-to-r ${rec.gradient} rounded-xl blur opacity-0 group-hover/rec:opacity-50 transition-all duration-300`}></div>
-                      <div className="relative bg-slate-700/30 border border-white/10 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-300">
-                        <div className="flex items-start space-x-3">
-                          <div className={`p-2 bg-gradient-to-r ${rec.gradient} rounded-lg flex-shrink-0`}>
-                            <rec.icon className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-white mb-1 group-hover/rec:text-sky-300 transition-colors">
-                              {rec.title}
-                            </h4>
-                            <p className="text-sm text-gray-400">{rec.description}</p>
-                          </div>
-                          <ArrowRight className="w-5 h-5 text-gray-400 group-hover/rec:text-sky-300 transition-colors flex-shrink-0" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            </button>
+            
+            <button
+              onClick={() => navigate('/setup')}
+              className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-emerald-500/40 transition-all group"
+            >
+              <PlayCircle className="text-emerald-500 group-hover:scale-110 transition-transform" size={24} />
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white">Quick Start</p>
+                <p className="text-xs text-slate-500">Launch new session</p>
               </div>
-            </div>
+            </button>
+            
+            <button
+              onClick={() => navigate('/job-fit')}
+              className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/40 transition-all group"
+            >
+              <Target className="text-blue-500 group-hover:scale-110 transition-transform" size={24} />
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white">Job Matching</p>
+                <p className="text-xs text-slate-500">Find your fit</p>
+              </div>
+            </button>
           </div>
-        </div>
-        </div>
+        </section>
       </div>
     </Layout>
   );

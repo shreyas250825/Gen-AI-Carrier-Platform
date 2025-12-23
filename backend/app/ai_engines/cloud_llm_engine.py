@@ -1,90 +1,111 @@
 """
-Cloud LLM Engine - Updated to use Three-Level Intelligence Architecture
-Maintains backward compatibility while leveraging the new intelligence system.
+Cloud LLM Engine - Updated to use AI Engine Router with Ollama + Gemini
+Maintains backward compatibility while leveraging the new router system.
 """
 from typing import Any, Dict, List
 
-# Import the new intelligence engine
-from app.ai_engines.intelligence_engine import intelligence_engine
+# Import the new AI Engine Router
+from app.ai_engines.engine_router import ai_engine_router
 
 def generate_questions(profile: Dict[str, Any], interview_type: str, persona: str = "professional", round_name: str = "round1") -> List[Dict[str, Any]]:
     """
-    Generate 6-7 interview questions using the three-level intelligence system.
+    Generate interview questions using the AI Engine Router (Ollama + Gemini).
     
-    This function now uses the IntelligenceEngine which automatically falls back through:
-    Level 3 (AWS Cloud AI) -> Level 2 (Local AI/Ollama) -> Level 1 (Deterministic)
+    DEPRECATED: This function is kept for backward compatibility.
+    Use ai_engine_router directly for new implementations.
     """
-    questions = intelligence_engine.generate_questions(profile, interview_type, count=7)
+    # Extract candidate context (Layer 1)
+    candidate_context = ai_engine_router.extract_candidate_context(
+        resume_data=profile,
+        role=profile.get("role", "Software Engineer"),
+        interview_type=interview_type
+    )
     
-    # Ensure backward compatibility - add missing fields if needed
-    for q in questions:
-        if "followups" not in q:
-            q["followups"] = ""
-        if "type" not in q:
-            q["type"] = interview_type
-        if "expected_keywords" not in q:
-            q["expected_keywords"] = []
-        if "expected_length" not in q:
-            q["expected_length"] = "medium"
-        if "ideal_answer" not in q:
-            q["ideal_answer"] = ""
+    # Generate first question (Layer 2)
+    first_question = ai_engine_router.generate_first_question(candidate_context)
     
-    return questions
-
+    # For backward compatibility, return a list with the first question
+    # In the new system, subsequent questions are generated adaptively
+    return [first_question]
 
 def evaluate_answer(question: str, answer: str, profile: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Evaluate answer using the three-level intelligence system.
+    Evaluate answer using the AI Engine Router (Ollama + Gemini).
     
-    Automatically falls back through intelligence levels for reliability.
+    DEPRECATED: This function is kept for backward compatibility.
+    Use ai_engine_router.evaluate_answer directly for new implementations.
     """
     # Extract expected_keywords from question if available
-    expected_keywords = []
     question_text = ""
     
     if isinstance(question, dict):
-        expected_keywords = question.get("expected_keywords", [])
         question_text = question.get("text", question.get("question", str(question)))
     else:
         question_text = str(question)
     
-    result = intelligence_engine.evaluate_answer(question_text, answer, expected_keywords, profile)
+    # Create candidate context from profile
+    candidate_context = ai_engine_router.extract_candidate_context(
+        resume_data=profile,
+        role=profile.get("role", "Software Engineer"),
+        interview_type="mixed"
+    )
     
-    # Ensure backward compatibility - map fields
-    if "notes" not in result and "short_notes" in result:
-        result["notes"] = result["short_notes"]
-    # Add relevance as notes if not present (for backward compatibility)
-    if "relevance" in result and "notes" not in result:
-        result["notes"] = result.get("short_notes", f"Relevance score: {result['relevance']}")
+    result = ai_engine_router.evaluate_answer(question_text, answer, candidate_context)
+    
+    # Ensure backward compatibility - add missing fields
+    if "notes" not in result:
+        result["notes"] = f"Technical: {result.get('technical', 0)}, Communication: {result.get('communication', 0)}, Relevance: {result.get('relevance', 0)}"
     
     return result
 
 
 def improve_answer(question: str, answer: str, profile: Dict[str, Any]) -> str:
     """
-    Improve answer using the three-level intelligence system.
+    DEPRECATED: Answer improvement removed from new architecture.
+    Returns original answer for backward compatibility.
     """
-    if isinstance(question, dict):
-        question_text = question.get("text", question.get("question", str(question)))
-    else:
-        question_text = str(question)
-    
-    return intelligence_engine.improve_answer(question_text, answer, profile)
+    return answer
 
 
 def generate_final_report(session_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Generate final report using the three-level intelligence system.
+    Generate final report using the AI Engine Router (Ollama + Gemini).
+    
+    DEPRECATED: This function is kept for backward compatibility.
+    Use ai_engine_router.generate_final_report directly for new implementations.
     """
-    return intelligence_engine.generate_final_report(session_data)
+    candidate_context = session_data.get("candidate_context", {})
+    conversation_history = session_data.get("conversation_history", [])
+    evaluations = session_data.get("evaluations", [])
+    
+    return ai_engine_router.generate_final_report(candidate_context, conversation_history, evaluations)
 
 
 def generate_interviewer_response(question: str, candidate_answer: str, conversation_history: list = None) -> str:
     """
-    Generate interviewer response - currently uses Level 1 deterministic responses.
-    TODO: Enhance with Level 2 and Level 3 implementations.
+    Generate interviewer response using AI Engine Router.
     """
-    # For now, use simple responses - can be enhanced with intelligence engine
+    # For simple responses, we can use a basic prompt with either engine
+    try:
+        # Try to use the router's primary engine for a simple response
+        engine_stats = ai_engine_router.get_engine_stats()
+        if engine_stats.get("ollama_available"):
+            response = ai_engine_router.ollama_engine.call_ollama(
+                f"Generate a brief professional interviewer response to this answer: {candidate_answer}",
+                temperature=0.3, max_tokens=100
+            )
+        else:
+            response = ai_engine_router.gemini_engine.call_gemini(
+                f"Generate a brief professional interviewer response to this answer: {candidate_answer}",
+                temperature=0.3, max_tokens=100
+            )
+        
+        if response and len(response.strip()) > 10:
+            return response.strip()
+    except Exception as e:
+        pass
+    
+    # Fallback responses
     responses = [
         "Thank you for sharing that. Can you elaborate on the specific challenges you faced?",
         "That's interesting. How did you measure the success of that approach?",
@@ -92,7 +113,6 @@ def generate_interviewer_response(question: str, candidate_answer: str, conversa
         "I appreciate that example. Can you walk me through your decision-making process?",
         "That sounds like valuable experience. How did that project impact your team or organization?"
     ]
-    
     import random
     return random.choice(responses)
 
@@ -103,25 +123,25 @@ def generate_interviewer_response(question: str, candidate_answer: str, conversa
 
 def generate_aptitude_questions(difficulty: str = "medium", count: int = 5) -> List[Dict[str, Any]]:
     """
-    Generate aptitude and logical reasoning questions.
+    Generate aptitude and logical reasoning questions using AI Engine Router.
     
     NEW FEATURE: Supports quantitative, logical, analytical, and pattern recognition questions.
     """
-    return intelligence_engine.generate_aptitude_questions(difficulty, count)
+    return ai_engine_router.generate_aptitude_questions(difficulty, count)
 
 
 def evaluate_aptitude_answer(question: Dict[str, Any], user_answer: str) -> Dict[str, Any]:
     """
-    Evaluate aptitude question answer.
+    Evaluate aptitude question answer using AI Engine Router.
     
     NEW FEATURE: Provides correct/incorrect feedback with explanations.
     """
-    return intelligence_engine.evaluate_aptitude_answer(question, user_answer)
+    return ai_engine_router.evaluate_aptitude_answer(question, user_answer)
 
 
 def calculate_job_fit(resume_data: Dict[str, Any], job_description: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Calculate job fit score and role matching analysis.
+    Calculate job fit score and role matching analysis using AI Engine Router.
     
     NEW FEATURE: AI-based job fit analysis with skill matching and recommendations.
     
@@ -132,6 +152,34 @@ def calculate_job_fit(resume_data: Dict[str, Any], job_description: Dict[str, An
     Returns:
         Dict with overall_fit_score, skill_match_percentage, missing_skills, recommendations
     """
-    return intelligence_engine.calculate_job_fit(resume_data, job_description)
+    # Create candidate context from resume data
+    candidate_context = ai_engine_router.extract_candidate_context(
+        resume_data=resume_data,
+        role=job_description.get("title", "Software Engineer"),
+        interview_type="mixed"
+    )
+    
+    return ai_engine_router.calculate_job_fit(candidate_context, job_description)
+
+
+# ============================================================================
+# ROUTER UTILITIES
+# ============================================================================
+
+def get_ai_engine_stats() -> Dict[str, Any]:
+    """Get AI engine usage statistics and health status."""
+    return ai_engine_router.get_engine_stats()
+
+def get_ai_engine_health() -> Dict[str, Any]:
+    """Get AI engine health check results."""
+    return ai_engine_router.health_check()
+
+def force_ai_engine(engine_name: str) -> bool:
+    """Force the router to use a specific engine."""
+    return ai_engine_router.force_engine(engine_name)
+
+def reset_ai_engine_preferences():
+    """Reset AI engine preferences to defaults."""
+    ai_engine_router.reset_preferences()
 
 

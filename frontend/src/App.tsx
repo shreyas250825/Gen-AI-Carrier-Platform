@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import Layout from './components/layout/Layout';
-import ProtectedRoute from './components/common/ProtectedRoute';
 import ScrollToTop from './components/common/ScrollToTop';
 import LandingPage from './components/landing/LandingPage';
 import ProfileSetup from './components/profile/ProfileSetup';
@@ -12,8 +11,6 @@ import ReportViewer from './components/reports/ReportViewer';
 import Report from './components/reports/Report';
 import Dashboard from './components/dashboard/Dashboard';
 import AboutPage from './components/about/AboutPage';
-import SignInPage from './components/auth/SignInPage';
-import SignUpPage from './components/auth/SignUpPage';
 import AptitudeAssessment from './components/aptitude/AptitudeAssessment';
 import JobFitAnalysis from './components/jobfit/JobFitAnalysis';
 
@@ -32,83 +29,17 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={<Layout><LandingPage /></Layout>} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
         
-        {/* Protected routes - require authentication */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/report" 
-          element={
-            <ProtectedRoute>
-              <Report />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/setup" 
-          element={
-            <ProtectedRoute>
-              <Layout><ProfileSetup /></Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/interview" 
-          element={
-            <ProtectedRoute>
-              <Layout><InterviewInterface /></Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/feedback" 
-          element={
-            <ProtectedRoute>
-              <Layout><FeedbackDashboard /></Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <Layout><ReportList /></Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/reports/:sessionId" 
-          element={
-            <ProtectedRoute>
-              <Layout><ReportViewer /></Layout>
-            </ProtectedRoute>
-          } 
-        />
-        {/* NEW ROUTES: Aptitude Assessment and Job Fit Analysis */}
-        <Route 
-          path="/aptitude" 
-          element={
-            <ProtectedRoute>
-              <AptitudeAssessment />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/job-fit" 
-          element={
-            <ProtectedRoute>
-              <JobFitAnalysis />
-            </ProtectedRoute>
-          } 
-        />
+        {/* All routes are now public - no authentication required */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/report" element={<Report />} />
+        <Route path="/setup" element={<Layout><ProfileSetup /></Layout>} />
+        <Route path="/interview" element={<Layout><InterviewInterface /></Layout>} />
+        <Route path="/feedback" element={<Layout><FeedbackDashboard /></Layout>} />
+        <Route path="/reports" element={<Layout><ReportList /></Layout>} />
+        <Route path="/reports/:sessionId" element={<Layout><ReportViewer /></Layout>} />
+        <Route path="/aptitude" element={<AptitudeAssessment />} />
+        <Route path="/job-fit" element={<JobFitAnalysis />} />
       </Routes>
     </Router>
   );

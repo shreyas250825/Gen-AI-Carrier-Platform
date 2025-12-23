@@ -125,15 +125,15 @@ const ResumeUpload: React.FC = () => {
   }
 
   return (
-    <div className="bg-slate-800/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10">
+    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[48px] p-8 md:p-10">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(139,92,246,0.5)]">
           <FileText className="w-10 h-10 text-white" />
         </div>
-        <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-sky-300 to-cyan-400 bg-clip-text text-transparent">
+        <h2 className="text-6xl font-black tracking-tighter uppercase mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
           Upload Your Resume
         </h2>
-        <p className="text-gray-400 text-lg">
+        <p className="text-slate-400 text-lg font-medium">
           We'll extract your skills and experience to personalize your interview
         </p>
       </div>
@@ -144,10 +144,10 @@ const ResumeUpload: React.FC = () => {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-300 ${
+        className={`relative border-2 border-dashed rounded-[32px] p-16 text-center transition-all duration-300 ${
           dragActive
-            ? 'border-sky-400 bg-sky-400/10 scale-105'
-            : 'border-white/20 hover:border-sky-400/50 hover:bg-sky-400/5'
+            ? 'border-purple-500 bg-purple-500/10 scale-105'
+            : 'border-white/20 hover:border-purple-500/50 hover:bg-purple-500/5'
         }`}
       >
       <input
@@ -165,13 +165,13 @@ const ResumeUpload: React.FC = () => {
           }`}
         >
           <div className="relative mb-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-2xl blur-xl opacity-50"></div>
-            <div className="relative bg-gradient-to-r from-sky-400 to-cyan-500 p-6 rounded-2xl transform hover:scale-110 transition-transform">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl blur-xl opacity-50 shadow-[0_0_20px_rgba(139,92,246,0.5)]"></div>
+            <div className="relative bg-gradient-to-br from-purple-600 to-sky-600 p-6 rounded-2xl transform hover:scale-110 transition-transform">
               <Upload className="w-12 h-12 text-white" />
             </div>
           </div>
-          <span className="text-white font-bold text-xl mb-3">Click or Drag & Drop</span>
-          <span className="text-gray-400 text-base">PDF, DOCX, or TXT (Max 10MB)</span>
+          <span className="text-white font-black text-xl mb-3 uppercase tracking-widest">Click or Drag & Drop</span>
+          <span className="text-slate-400 text-base font-medium">PDF, DOCX, or TXT (Max 10MB)</span>
           <div className="mt-6 flex items-center justify-center space-x-4 text-sm text-gray-500">
             <span className="flex items-center space-x-2">
               <FileText className="w-4 h-4" />

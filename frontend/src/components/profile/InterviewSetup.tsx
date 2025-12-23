@@ -85,30 +85,30 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({ selectedRole, onStart }
   const canStart = selectedRole && interviewType && persona;
 
   return (
-    <div className="bg-slate-800/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10">
+    <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[48px] p-8 md:p-12">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-sky-400 to-cyan-500 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl mb-6 transform hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(139,92,246,0.5)]">
           <PlayCircle className="w-10 h-10 text-white" />
         </div>
-        <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-sky-300 to-cyan-400 bg-clip-text text-transparent">
+        <h2 className="text-5xl font-black tracking-tighter uppercase mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
           Interview Setup
         </h2>
-        <p className="text-gray-400 text-lg">
+        <p className="text-slate-400 text-lg font-medium">
           Configure your interview settings
         </p>
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Selected Role Display */}
-        <div className="bg-sky-400/10 border border-sky-400/30 rounded-xl p-6">
+        <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">Selected Role</p>
-              <p className="text-lg font-bold text-sky-300">{selectedRole}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Selected Role</p>
+              <p className="text-lg font-black text-purple-400">{selectedRole}</p>
             </div>
             <button
               onClick={() => navigate('/setup')}
-              className="text-sm text-sky-400 hover:text-sky-300 transition-colors"
+              className="text-sm font-black uppercase tracking-widest text-purple-400 hover:text-purple-300 transition-colors"
             >
               Change
             </button>

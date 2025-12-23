@@ -8,13 +8,12 @@ class SessionManager:
     def __init__(self, db: Session):
         self.db = db
     
-    def create_session(self, role: str, interview_type: str, round_type: str, user_id: int = None):
+    def create_session(self, role: str, interview_type: str, round_type: str):
         """Create a new interview session"""
         session_id = str(uuid.uuid4())
         
         interview = Interview(
             session_id=session_id,
-            user_id=user_id,
             role=role,
             interview_type=interview_type,
             round_type=round_type,

@@ -56,15 +56,15 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 border-t border-white/10 overflow-hidden">
+    <footer className="relative bg-[#020617] border-t border-white/10 overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Top Gradient Line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-sky-400 to-transparent"></div>
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-8">
         {/* Main Footer Content */}
@@ -74,16 +74,16 @@ const Footer = () => {
             {/* Logo */}
             <div className="flex items-center space-x-3 mb-6 group cursor-pointer">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-sky-500 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-                <div className="relative bg-gradient-to-br from-sky-400 to-sky-500 p-3 rounded-xl transform group-hover:scale-110 transition-all duration-300 shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-sky-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse shadow-[0_0_20px_rgba(139,92,246,0.5)]"></div>
+                <div className="relative bg-gradient-to-br from-purple-600 to-sky-600 p-3 rounded-2xl transform group-hover:scale-110 transition-all duration-300 shadow-xl">
                   <Sparkles className="w-7 h-7 text-white" />
                 </div>
               </div>
               <div>
-                <span className="text-3xl font-bold bg-gradient-to-r from-sky-300 to-sky-500 bg-clip-text text-transparent">
-                  Intervize
+                <span className="text-3xl font-black tracking-tighter uppercase bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                  ReadySet AI
                 </span>
-                <div className="text-xs text-gray-500">AI Interview Excellence</div>
+                <div className="text-[10px] text-purple-400 font-bold uppercase tracking-[0.3em]">Interview Coach</div>
               </div>
             </div>
 

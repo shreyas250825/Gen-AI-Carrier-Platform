@@ -3,263 +3,223 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Upload, FileText, Briefcase, Target, TrendingUp, 
   CheckCircle, AlertCircle, ArrowRight, RefreshCw,
-  User, MapPin, Calendar, Award, BookOpen, X, FileCheck
+  User, MapPin, Calendar, Award, BookOpen, X, FileCheck,
+  Search, Edit3, Loader2
 } from 'lucide-react';
 import Layout from '../layout/Layout';
 
-interface JobDescription {
-  title: string;
-  company: string;
-  required_skills: string[];
-  preferred_skills: string[];
-  required_experience_years: number;
-  location: string;
-  description: string;
+interface ParsedResumeData {
+  skills: string[];
+  experience_years: number;
+  experience: {
+    level: string;
+    years_experience: number;
+    companies: string[];
+    positions: string[];
+  };
+  projects: string[];
+  education: string[];
+  estimated_role: string;
+  summary: string;
 }
 
-interface JobFitResult {
+interface JobFitAnalysis {
   overall_fit_score: number;
   skill_match_percentage: number;
   experience_match_percentage: number;
-  missing_required_skills: string[];
-  missing_preferred_skills: string[];
+  missing_skills: string[];
   matched_skills: string[];
   role_suitability: string;
-  recommendations: string[];
+  confidence_score: number;
+  role_specific_insights: {
+    experience_alignment: any;
+    skill_gap_analysis: any;
+    growth_potential: any;
+    cultural_fit_indicators: any;
+  };
 }
 
-interface RoleMatch {
-  job_description: JobDescription;
-  fit_score: number;
-  skill_match: number;
-  experience_match: number;
-  suitability: string;
-  missing_skills: string[];
-  recommendations: string[];
+interface JobFitResult {
+  success: boolean;
+  role: string;
+  candidate_summary: {
+    name: string;
+    experience_years: number;
+    experience_level: string;
+    top_skills: string[];
+    estimated_role: string;
+  };
+  job_fit_analysis: JobFitAnalysis;
+  recommendation: {
+    recommendation: string;
+    action: string;
+    confidence_level: string;
+    color: string;
+    score: number;
+  };
+  next_steps: string[];
 }
+
+interface AvailableRole {
+  roles: string[];
+  total_count: number;
+}
+
+type FlowStep = 'upload' | 'role-selection' | 'analysis' | 'results';
 
 const JobFitAnalysis: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'analyze' | 'matching'>('analyze');
-  const [resumeStatus, setResumeStatus] = useState<'none' | 'uploaded' | 'parsing' | 'parsed'>('none');
-  const [selectedJob, setSelectedJob] = useState<JobDescription | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [fitResult, setFitResult] = useState<JobFitResult | null>(null);
-  const [roleMatches, setRoleMatches] = useState<RoleMatch[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState<FlowStep>('upload');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [parseProgress, setParseProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [parsedData, setParsedData] = useState<ParsedResumeData | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [customRole, setCustomRole] = useState<string>('');
+  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<JobFitResult | null>(null);
+  const [error, setError] = useState<string>('');
 
-  // Mock job descriptions
-  const sampleJobs: JobDescription[] = [
-    {
-      title: 'Senior Software Engineer',
-      company: 'TechCorp',
-      required_skills: ['Python', 'JavaScript', 'React', 'Node.js', 'PostgreSQL'],
-      preferred_skills: ['AWS', 'Docker', 'TypeScript', 'GraphQL'],
-      required_experience_years: 5,
-      location: 'San Francisco, CA',
-      description: 'We are looking for a senior software engineer to join our growing team...'
-    },
-    {
-      title: 'Frontend Developer',
-      company: 'StartupXYZ',
-      required_skills: ['JavaScript', 'React', 'HTML', 'CSS'],
-      preferred_skills: ['TypeScript', 'Next.js', 'Tailwind CSS'],
-      required_experience_years: 3,
-      location: 'Remote',
-      description: 'Join our frontend team to build amazing user experiences...'
-    },
-    {
-      title: 'Data Scientist',
-      company: 'DataCorp',
-      required_skills: ['Python', 'Machine Learning', 'SQL', 'Statistics'],
-      preferred_skills: ['TensorFlow', 'PyTorch', 'AWS', 'Spark'],
-      required_experience_years: 4,
-      location: 'New York, NY',
-      description: 'We are seeking a data scientist to drive insights from our data...'
-    }
-  ];
-
-  // Mock role matching results
-  const mockRoleMatches: RoleMatch[] = [
-    {
-      job_description: sampleJobs[0],
-      fit_score: 85,
-      skill_match: 80,
-      experience_match: 90,
-      suitability: 'Excellent fit - highly recommended',
-      missing_skills: ['GraphQL'],
-      recommendations: ['Consider learning GraphQL', 'Highlight your Python experience']
-    },
-    {
-      job_description: sampleJobs[1],
-      fit_score: 92,
-      skill_match: 95,
-      experience_match: 88,
-      suitability: 'Excellent fit - highly recommended',
-      missing_skills: [],
-      recommendations: ['Perfect match for your skills', 'Emphasize React expertise']
-    },
-    {
-      job_description: sampleJobs[2],
-      fit_score: 65,
-      skill_match: 60,
-      experience_match: 70,
-      suitability: 'Moderate fit - requires skill development',
-      missing_skills: ['Machine Learning', 'Statistics'],
-      recommendations: ['Learn machine learning fundamentals', 'Take statistics courses']
-    }
-  ];
-
-  // Load user profile on mount
+  // Load available roles on component mount
   useEffect(() => {
-    const profile = localStorage.getItem('interviewProfile');
-    if (profile) {
-      try {
-        const parsedProfile = JSON.parse(profile);
-        setUserProfile(parsedProfile);
-        setResumeStatus('parsed');
-      } catch (e) {
-        // Failed to parse profile, continue with no profile
-      }
-    }
+    fetchAvailableRoles();
   }, []);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please upload a PDF or Word document');
-        return;
+  const fetchAvailableRoles = async () => {
+    try {
+      const response = await fetch('/api/job-fit/available-roles');
+      if (response.ok) {
+        const data: AvailableRole = await response.json();
+        setAvailableRoles(data.roles);
       }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        return;
-      }
-
-      setUploadedFile(file);
-      setResumeStatus('uploaded');
-      
-      // Start parsing simulation
-      setTimeout(() => {
-        setResumeStatus('parsing');
-        setParseProgress(0);
-        
-        // Simulate parsing progress
-        const progressInterval = setInterval(() => {
-          setParseProgress(prev => {
-            if (prev >= 100) {
-              clearInterval(progressInterval);
-              // Simulate parsed profile data
-              const mockParsedProfile = {
-                name: 'John Doe',
-                email: 'john.doe@email.com',
-                phone: '+1 (555) 123-4567',
-                location: 'San Francisco, CA',
-                estimated_role: 'Software Engineer',
-                experience_level: 'Senior',
-                experience_years: 5,
-                skills: ['Python', 'JavaScript', 'React', 'Node.js', 'PostgreSQL', 'AWS', 'Docker'],
-                education: 'Bachelor of Science in Computer Science',
-                summary: 'Experienced software engineer with 5+ years in full-stack development',
-                work_experience: [
-                  {
-                    title: 'Senior Software Engineer',
-                    company: 'Tech Solutions Inc.',
-                    duration: '2021 - Present',
-                    description: 'Led development of scalable web applications using React and Node.js'
-                  },
-                  {
-                    title: 'Software Engineer',
-                    company: 'StartupXYZ',
-                    duration: '2019 - 2021',
-                    description: 'Developed frontend components and REST APIs'
-                  }
-                ]
-              };
-              
-              setUserProfile(mockParsedProfile);
-              localStorage.setItem('interviewProfile', JSON.stringify(mockParsedProfile));
-              setResumeStatus('parsed');
-              return 100;
-            }
-            return prev + 10;
-          });
-        }, 200);
-      }, 1000);
+    } catch (error) {
+      console.error('Failed to fetch available roles:', error);
     }
   };
 
-  const handleRemoveResume = () => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please upload a PDF, Word document, or text file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    setUploadedFile(file);
+    setIsUploading(true);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('resume_file', file);
+
+      const response = await fetch('/api/job-fit/parse-resume', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setParsedData(data.parsed_data);
+          setCurrentStep('role-selection');
+          
+          // Pre-select estimated role if available
+          if (data.parsed_data.estimated_role && availableRoles.includes(data.parsed_data.estimated_role)) {
+            setSelectedRole(data.parsed_data.estimated_role);
+          }
+        } else {
+          setError('Failed to parse resume. Please try again.');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || 'Failed to parse resume');
+      }
+    } catch (error) {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRoleSelection = (role: string) => {
+    setSelectedRole(role);
+    setIsCustomRole(false);
+    setCustomRole('');
+  };
+
+  const handleCustomRoleToggle = () => {
+    setIsCustomRole(!isCustomRole);
+    if (!isCustomRole) {
+      setSelectedRole('');
+    } else {
+      setCustomRole('');
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!parsedData || (!selectedRole && !customRole)) return;
+
+    const roleToAnalyze = isCustomRole ? customRole : selectedRole;
+    
+    // For custom roles, we don't validate against the available roles list
+    if (!isCustomRole && !availableRoles.includes(roleToAnalyze)) {
+      setError('Please select a valid role from the list');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('parsed_resume', JSON.stringify(parsedData));
+      formData.append('selected_role', roleToAnalyze);
+
+      const response = await fetch('/api/job-fit/analyze-with-role', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result: JobFitResult = await response.json();
+        setAnalysisResult(result);
+        setCurrentStep('results');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || 'Failed to analyze job fit');
+      }
+    } catch (error) {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleStartOver = () => {
+    setCurrentStep('upload');
     setUploadedFile(null);
-    setResumeStatus('none');
-    setUserProfile(null);
-    setParseProgress(0);
-    setFitResult(null);
-    // Clear the file input
+    setParsedData(null);
+    setSelectedRole('');
+    setCustomRole('');
+    setIsCustomRole(false);
+    setAnalysisResult(null);
+    setError('');
+    
+    // Clear file input
     const fileInput = document.getElementById('resume-upload') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
-    }
-  };
-
-  const handleAnalyzeFit = async () => {
-    if (!selectedJob || !userProfile) return;
-
-    setIsAnalyzing(true);
-    try {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/job-fit/analyze', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ resume_data: userProfile, job_description: selectedJob })
-      // });
-      // const result = await response.json();
-
-      // Mock result for demonstration
-      const mockResult: JobFitResult = {
-        overall_fit_score: 85,
-        skill_match_percentage: 80,
-        experience_match_percentage: 90,
-        missing_required_skills: ['GraphQL'],
-        missing_preferred_skills: ['Docker', 'AWS'],
-        matched_skills: ['Python', 'JavaScript', 'React', 'Node.js'],
-        role_suitability: 'Excellent fit - highly recommended',
-        recommendations: [
-          'Consider learning GraphQL to strengthen your backend skills',
-          'AWS certification would make you even more competitive',
-          'Highlight your React and Node.js experience in your application'
-        ]
-      };
-
-      setTimeout(() => {
-        setFitResult(mockResult);
-        setIsAnalyzing(false);
-      }, 3000);
-    } catch (error) {
-      // Failed to analyze job fit
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleRoleMatching = async () => {
-    if (!userProfile) return;
-
-    setIsAnalyzing(true);
-    try {
-      // Mock API call
-      setTimeout(() => {
-        setRoleMatches(mockRoleMatches);
-        setIsAnalyzing(false);
-      }, 2000);
-    } catch (error) {
-      // Failed to find matching roles
-      setIsAnalyzing(false);
     }
   };
 
@@ -269,521 +229,456 @@ const JobFitAnalysis: React.FC = () => {
     return 'text-red-400';
   };
 
+  const getRecommendationColor = (color: string) => {
+    switch (color) {
+      case 'green': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
+      case 'blue': return 'text-sky-400 bg-sky-400/10 border-sky-400/30';
+      case 'yellow': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
+      case 'red': return 'text-red-400 bg-red-400/10 border-red-400/30';
+      default: return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
+    }
+  };
+
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="min-h-screen bg-[#020617] text-white">
+        {/* Animated Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-6 py-8 relative z-10">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">AI Job Fit & Role Matching</h1>
-            <p className="text-gray-400">Analyze your fit for specific roles and discover matching opportunities</p>
+            <h1 className="text-4xl font-black tracking-tighter uppercase mb-4 bg-gradient-to-r from-purple-600 to-sky-600 bg-clip-text text-transparent">
+              AI Job Fit Analysis
+            </h1>
+            <p className="text-gray-400 text-lg">Upload resume → Select role → Get AI-powered analysis</p>
           </div>
 
-          {/* Tab Navigation */}
+          {/* Progress Steps */}
           <div className="flex justify-center mb-8">
-            <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
-              <button
-                onClick={() => setActiveTab('analyze')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                  activeTab === 'analyze'
-                    ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Job Fit Analysis
-              </button>
-              <button
-                onClick={() => setActiveTab('matching')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                  activeTab === 'matching'
-                    ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Role Matching
-              </button>
+            <div className="flex items-center space-x-4">
+              {[
+                { step: 'upload', label: 'Upload Resume', icon: Upload },
+                { step: 'role-selection', label: 'Select Role', icon: Briefcase },
+                { step: 'analysis', label: 'AI Analysis', icon: Target },
+                { step: 'results', label: 'Results', icon: TrendingUp }
+              ].map(({ step, label, icon: Icon }, index) => {
+                const isActive = currentStep === step;
+                const isCompleted = ['upload', 'role-selection', 'analysis', 'results'].indexOf(currentStep) > index;
+                
+                return (
+                  <div key={step} className="flex items-center">
+                    <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                      isActive 
+                        ? 'border-sky-400 bg-sky-400/20 text-sky-400' 
+                        : isCompleted 
+                          ? 'border-emerald-400 bg-emerald-400/20 text-emerald-400'
+                          : 'border-gray-600 bg-gray-600/20 text-gray-400'
+                    }`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className={`ml-2 text-sm font-medium ${
+                      isActive ? 'text-sky-400' : isCompleted ? 'text-emerald-400' : 'text-gray-400'
+                    }`}>
+                      {label}
+                    </span>
+                    {index < 3 && (
+                      <div className={`w-8 h-0.5 mx-4 ${
+                        isCompleted ? 'bg-emerald-400' : 'bg-gray-600'
+                      }`} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {activeTab === 'analyze' && (
-            <div className="space-y-8">
-              {/* Resume Status */}
-              <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <FileText className="w-6 h-6 text-sky-400" />
-                  Resume Status
-                </h3>
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-400/10 border border-red-400/30 rounded-xl">
+              <div className="flex items-center gap-2 text-red-400">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">Error</span>
+              </div>
+              <p className="text-red-300 mt-1">{error}</p>
+            </div>
+          )}
+
+          {/* Step 1: Upload Resume */}
+          {currentStep === 'upload' && (
+            <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-8">
+              <div className="text-center">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-600 to-sky-600 rounded-full flex items-center justify-center">
+                  <Upload className="w-12 h-12 text-white" />
+                </div>
+                <h2 className="text-2xl font-black tracking-tighter uppercase mb-4">Upload Your Resume</h2>
+                <p className="text-gray-400 mb-6">Upload your resume to get started with AI-powered job fit analysis</p>
+                <p className="text-sm text-gray-500 mb-8">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</p>
                 
-                {resumeStatus === 'none' && (
-                  <div className="text-center py-8">
-                    <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-400 mb-4">Upload your resume to get started</p>
-                    <p className="text-sm text-gray-500 mb-6">Supported formats: PDF, DOC, DOCX (Max 5MB)</p>
-                    <label className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all">
-                      <Upload className="w-5 h-5" />
-                      Upload Resume
-                      <input
-                        id="resume-upload"
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
+                {!isUploading ? (
+                  <label className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 px-8 py-4 rounded-[24px] font-black tracking-tighter uppercase cursor-pointer transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)]">
+                    <Upload className="w-6 h-6" />
+                    Choose Resume File
+                    <input
+                      id="resume-upload"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-sky-400 font-medium">Parsing your resume...</p>
+                    <p className="text-sm text-gray-400 mt-2">This may take a few moments</p>
                   </div>
                 )}
-
-                {resumeStatus === 'uploaded' && (
-                  <div className="text-center py-8">
-                    <FileCheck className="w-16 h-16 mx-auto mb-4 text-sky-400" />
-                    <p className="text-sky-400 mb-2">Resume uploaded successfully!</p>
-                    <p className="text-sm text-gray-400 mb-4">{uploadedFile?.name}</p>
-                    <p className="text-gray-400">Preparing to parse your resume...</p>
-                  </div>
-                )}
-
-                {resumeStatus === 'parsing' && (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-sky-400 mb-4">Parsing your resume...</p>
-                    <div className="max-w-md mx-auto">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-400">Progress</span>
-                        <span className="text-sm text-sky-300">{parseProgress}%</span>
-                      </div>
-                      <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-sky-400 to-cyan-500 rounded-full transition-all duration-300"
-                          style={{ width: `${parseProgress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {parseProgress < 30 && "Extracting text from document..."}
-                        {parseProgress >= 30 && parseProgress < 60 && "Analyzing skills and experience..."}
-                        {parseProgress >= 60 && parseProgress < 90 && "Processing work history..."}
-                        {parseProgress >= 90 && "Finalizing profile..."}
-                      </p>
+                
+                {uploadedFile && !isUploading && (
+                  <div className="mt-6 p-4 bg-slate-700/30 rounded-xl">
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <FileText className="w-4 h-4" />
+                      <span>{uploadedFile.name}</span>
+                      <span>({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
                     </div>
-                  </div>
-                )}
-
-                {resumeStatus === 'parsed' && userProfile && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-emerald-400" />
-                        <span className="text-emerald-400 font-medium">Resume parsed successfully!</span>
-                      </div>
-                      <button
-                        onClick={handleRemoveResume}
-                        className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                        Remove
-                      </button>
-                    </div>
-                    
-                    {uploadedFile && (
-                      <div className="mb-4 p-3 bg-slate-700/30 rounded-lg">
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <FileText className="w-4 h-4" />
-                          <span>{uploadedFile.name}</span>
-                          <span>({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3 text-emerald-400">Profile Summary</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-gray-400" />
-                            <span>{userProfile.name || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-gray-400" />
-                            <span>{userProfile.location || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Briefcase className="w-4 h-4 text-gray-400" />
-                            <span>{userProfile.estimated_role || userProfile.role || 'Software Engineer'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span>{userProfile.experience_years || 3} years experience</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Award className="w-4 h-4 text-gray-400" />
-                            <span>{userProfile.experience_level || 'Mid-Level'}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-3 text-sky-400">Key Skills</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {(userProfile.skills || ['Python', 'JavaScript', 'React']).slice(0, 8).map((skill: string, index: number) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-sky-400/10 border border-sky-400/30 rounded-full text-xs text-sky-300"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                          {(userProfile.skills || []).length > 8 && (
-                            <span className="px-3 py-1 bg-gray-600/30 border border-gray-600/30 rounded-full text-xs text-gray-400">
-                              +{(userProfile.skills || []).length - 8} more
-                            </span>
-                          )}
-                        </div>
-                        
-                        {userProfile.summary && (
-                          <div className="mt-4">
-                            <h5 className="font-medium text-gray-300 mb-2">Summary</h5>
-                            <p className="text-sm text-gray-400 leading-relaxed">{userProfile.summary}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {userProfile.work_experience && userProfile.work_experience.length > 0 && (
-                      <div className="mt-6">
-                        <h4 className="font-semibold mb-3 text-purple-400">Work Experience</h4>
-                        <div className="space-y-3">
-                          {userProfile.work_experience.slice(0, 2).map((exp: any, index: number) => (
-                            <div key={index} className="p-3 bg-slate-700/30 rounded-lg">
-                              <div className="flex items-start justify-between mb-2">
-                                <div>
-                                  <h5 className="font-medium text-white">{exp.title}</h5>
-                                  <p className="text-sm text-gray-400">{exp.company}</p>
-                                </div>
-                                <span className="text-xs text-gray-500">{exp.duration}</span>
-                              </div>
-                              <p className="text-sm text-gray-400">{exp.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
+            </div>
+          )}
 
-              {/* Job Selection */}
-              {resumeStatus === 'parsed' && (
-                <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <Briefcase className="w-6 h-6 text-sky-400" />
-                    Select Job Role
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {sampleJobs.map((job, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedJob(job)}
-                        className={`text-left p-4 rounded-xl border transition-all ${
-                          selectedJob?.title === job.title
-                            ? 'border-sky-400 bg-sky-400/10'
-                            : 'border-white/10 bg-slate-700/30 hover:bg-slate-700/50'
-                        }`}
-                      >
-                        <h4 className="font-semibold mb-1">{job.title}</h4>
-                        <p className="text-sm text-gray-400 mb-2">{job.company}</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <MapPin className="w-3 h-3" />
-                          <span>{job.location}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  {selectedJob && (
-                    <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-                      <h4 className="font-semibold mb-2">{selectedJob.title} at {selectedJob.company}</h4>
-                      <p className="text-sm text-gray-400 mb-3">{selectedJob.description}</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-sky-400 font-medium">Required Skills:</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {selectedJob.required_skills.map((skill, i) => (
-                              <span key={i} className="px-2 py-1 bg-red-400/10 text-red-300 rounded text-xs">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-sky-400 font-medium">Preferred Skills:</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {selectedJob.preferred_skills.map((skill, i) => (
-                              <span key={i} className="px-2 py-1 bg-yellow-400/10 text-yellow-300 rounded text-xs">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
+          {/* Step 2: Role Selection */}
+          {currentStep === 'role-selection' && parsedData && (
+            <div className="space-y-6">
+              {/* Parsed Resume Summary */}
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  <h3 className="text-xl font-black tracking-tighter uppercase">Resume Parsed Successfully</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold mb-3 text-emerald-400">Profile Summary</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-gray-400" />
+                        <span>Estimated Role: {parsedData.estimated_role}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span>Experience: {parsedData.experience_years} years</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4 text-gray-400" />
+                        <span>Level: {parsedData.experience.level}</span>
                       </div>
                     </div>
-                  )}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-3 text-sky-400">Top Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {parsedData.skills.slice(0, 6).map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-sky-400/10 border border-sky-400/30 rounded-full text-xs text-sky-300"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                      {parsedData.skills.length > 6 && (
+                        <span className="px-3 py-1 bg-gray-600/30 border border-gray-600/30 rounded-full text-xs text-gray-400">
+                          +{parsedData.skills.length - 6} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+              {/* Role Selection */}
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-6">Select Target Role</h3>
+                
+                {/* Toggle between predefined and custom role */}
+                <div className="flex gap-4 mb-6">
                   <button
-                    onClick={handleAnalyzeFit}
-                    disabled={!selectedJob || isAnalyzing}
-                    className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-                      !selectedJob || isAnalyzing
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white'
+                    onClick={() => setIsCustomRole(false)}
+                    className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                      !isCustomRole 
+                        ? 'bg-sky-400/20 text-sky-400 border border-sky-400/30' 
+                        : 'bg-gray-600/20 text-gray-400 border border-gray-600/30'
                     }`}
                   >
-                    {isAnalyzing ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Analyzing Fit...
-                      </>
-                    ) : (
-                      <>
-                        <Target className="w-5 h-5" />
-                        Analyze Job Fit
-                      </>
-                    )}
+                    Choose from List
+                  </button>
+                  <button
+                    onClick={() => setIsCustomRole(true)}
+                    className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                      isCustomRole 
+                        ? 'bg-sky-400/20 text-sky-400 border border-sky-400/30' 
+                        : 'bg-gray-600/20 text-gray-400 border border-gray-600/30'
+                    }`}
+                  >
+                    Custom Role
                   </button>
                 </div>
-              )}
 
-              {/* Fit Results */}
-              {fitResult && (
-                <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <TrendingUp className="w-6 h-6 text-sky-400" />
-                    Job Fit Analysis Results
-                  </h3>
-
-                  {/* Score Overview */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="text-center">
-                      <div className={`text-4xl font-bold mb-2 ${getScoreColor(fitResult.overall_fit_score)}`}>
-                        {fitResult.overall_fit_score}%
-                      </div>
-                      <div className="text-gray-400">Overall Fit</div>
-                    </div>
-                    <div className="text-center">
-                      <div className={`text-4xl font-bold mb-2 ${getScoreColor(fitResult.skill_match_percentage)}`}>
-                        {fitResult.skill_match_percentage}%
-                      </div>
-                      <div className="text-gray-400">Skill Match</div>
-                    </div>
-                    <div className="text-center">
-                      <div className={`text-4xl font-bold mb-2 ${getScoreColor(fitResult.experience_match_percentage)}`}>
-                        {fitResult.experience_match_percentage}%
-                      </div>
-                      <div className="text-gray-400">Experience Match</div>
-                    </div>
-                  </div>
-
-                  {/* Suitability */}
-                  <div className="mb-6 p-4 bg-slate-700/30 rounded-xl">
-                    <h4 className="font-semibold mb-2 text-emerald-400">Role Suitability</h4>
-                    <p className="text-gray-300">{fitResult.role_suitability}</p>
-                  </div>
-
-                  {/* Skills Analysis */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <h4 className="font-semibold mb-3 text-emerald-400 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5" />
-                        Matched Skills
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {fitResult.matched_skills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-emerald-400/10 border border-emerald-400/30 rounded-full text-xs text-emerald-300"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-3 text-red-400 flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5" />
-                        Missing Skills
-                      </h4>
-                      <div className="space-y-2">
-                        {fitResult.missing_required_skills.length > 0 && (
-                          <div>
-                            <span className="text-xs text-red-300 font-medium">Required:</span>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {fitResult.missing_required_skills.map((skill, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1 bg-red-400/10 border border-red-400/30 rounded-full text-xs text-red-300"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {fitResult.missing_preferred_skills.length > 0 && (
-                          <div>
-                            <span className="text-xs text-yellow-300 font-medium">Preferred:</span>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {fitResult.missing_preferred_skills.map((skill, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1 bg-yellow-400/10 border border-yellow-400/30 rounded-full text-xs text-yellow-300"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recommendations */}
+                {!isCustomRole ? (
                   <div>
-                    <h4 className="font-semibold mb-3 text-sky-400 flex items-center gap-2">
-                      <BookOpen className="w-5 h-5" />
-                      Recommendations
-                    </h4>
-                    <div className="space-y-2">
-                      {fitResult.recommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 bg-slate-700/30 rounded-lg">
-                          <ArrowRight className="w-4 h-4 text-sky-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-300">{rec}</span>
-                        </div>
+                    <div className="mb-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search roles..."
+                          className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-sky-400/50"
+                          onChange={(e) => {
+                            // Simple search filter - you can enhance this
+                            const searchTerm = e.target.value.toLowerCase();
+                            // Filter logic here if needed
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                      {availableRoles.map((role, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleRoleSelection(role)}
+                          className={`text-left p-4 rounded-xl border transition-all ${
+                            selectedRole === role
+                              ? 'border-sky-400 bg-sky-400/10 text-sky-400'
+                              : 'border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-gray-300'
+                          }`}
+                        >
+                          <div className="font-medium">{role}</div>
+                          {parsedData.estimated_role === role && (
+                            <div className="text-xs text-emerald-400 mt-1">Recommended</div>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <div>
+                    <div className="relative">
+                      <Edit3 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Enter custom role (e.g., Senior DevOps Engineer)"
+                        value={customRole}
+                        onChange={(e) => setCustomRole(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-sky-400/50"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Enter any role title you want to analyze against
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-4 mt-8">
+                  <button
+                    onClick={handleStartOver}
+                    className="px-6 py-3 bg-gray-600/30 hover:bg-gray-600/50 rounded-xl font-medium transition-all"
+                  >
+                    Start Over
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep('analysis')}
+                    disabled={!selectedRole && !customRole}
+                    className={`flex-1 px-6 py-3 rounded-xl font-black tracking-tighter uppercase transition-all ${
+                      (selectedRole || customRole)
+                        ? 'bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 text-white shadow-[0_0_20px_rgba(139,92,246,0.5)]'
+                        : 'bg-gray-600/30 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Analyze Job Fit
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
-          {activeTab === 'matching' && (
-            <div className="space-y-8">
-              {/* Role Matching Header */}
-              <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Target className="w-6 h-6 text-sky-400" />
-                  Find Matching Roles
-                </h3>
-                <p className="text-gray-400 mb-6">
-                  Discover roles that match your skills and experience level
+          {/* Step 3: Analysis */}
+          {currentStep === 'analysis' && (
+            <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-8">
+              <div className="text-center">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-600 to-sky-600 rounded-full flex items-center justify-center">
+                  {!isAnalyzing ? (
+                    <Target className="w-12 h-12 text-white" />
+                  ) : (
+                    <Loader2 className="w-12 h-12 text-white animate-spin" />
+                  )}
+                </div>
+                <h2 className="text-2xl font-black tracking-tighter uppercase mb-4">
+                  {!isAnalyzing ? 'Ready to Analyze' : 'AI Analysis in Progress'}
+                </h2>
+                <p className="text-gray-400 mb-8">
+                  {!isAnalyzing 
+                    ? `Analyzing your fit for: ${isCustomRole ? customRole : selectedRole}`
+                    : 'Ollama AI is analyzing your resume against the selected role...'
+                  }
                 </p>
                 
-                <button
-                  onClick={handleRoleMatching}
-                  disabled={!userProfile || isAnalyzing}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-                    !userProfile || isAnalyzing
-                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white'
-                  }`}
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Finding Matches...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-5 h-5" />
-                      Find Matching Roles
-                    </>
-                  )}
-                </button>
+                {!isAnalyzing ? (
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      onClick={() => setCurrentStep('role-selection')}
+                      className="px-6 py-3 bg-gray-600/30 hover:bg-gray-600/50 rounded-xl font-medium transition-all"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleAnalyze}
+                      className="px-8 py-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 rounded-xl font-black tracking-tighter uppercase transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+                    >
+                      Start Analysis
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center gap-2 text-sky-400">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Processing with Ollama AI...</span>
+                    </div>
+                    <p className="text-sm text-gray-500">This may take 30-60 seconds</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Results */}
+          {currentStep === 'results' && analysisResult && (
+            <div className="space-y-6">
+              {/* Overall Results */}
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
+                <h3 className="text-2xl font-black tracking-tighter uppercase mb-6 text-center">
+                  Job Fit Analysis Results
+                </h3>
+
+                {/* Score Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="text-center">
+                    <div className={`text-5xl font-black mb-2 ${getScoreColor(analysisResult.job_fit_analysis.overall_fit_score)}`}>
+                      {analysisResult.job_fit_analysis.overall_fit_score}%
+                    </div>
+                    <div className="text-gray-400 font-medium">Overall Fit</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-5xl font-black mb-2 ${getScoreColor(analysisResult.job_fit_analysis.skill_match_percentage)}`}>
+                      {analysisResult.job_fit_analysis.skill_match_percentage}%
+                    </div>
+                    <div className="text-gray-400 font-medium">Skill Match</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-5xl font-black mb-2 ${getScoreColor(analysisResult.job_fit_analysis.experience_match_percentage)}`}>
+                      {analysisResult.job_fit_analysis.experience_match_percentage}%
+                    </div>
+                    <div className="text-gray-400 font-medium">Experience Match</div>
+                  </div>
+                </div>
+
+                {/* Recommendation */}
+                <div className={`p-4 rounded-xl border mb-6 ${getRecommendationColor(analysisResult.recommendation.color)}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5" />
+                    <span className="font-black tracking-tighter uppercase">
+                      {analysisResult.recommendation.recommendation}
+                    </span>
+                  </div>
+                  <p className="text-sm opacity-90">{analysisResult.recommendation.action}</p>
+                  <div className="flex items-center gap-4 mt-2 text-xs">
+                    <span>Confidence: {analysisResult.recommendation.confidence_level}</span>
+                    <span>AI Confidence: {analysisResult.job_fit_analysis.confidence_score}%</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Role Matches */}
-              {roleMatches.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-bold">Recommended Roles</h3>
-                  {roleMatches.map((match, index) => (
-                    <div key={index} className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h4 className="text-lg font-semibold mb-1">{match.job_description.title}</h4>
-                          <p className="text-gray-400 mb-2">{match.job_description.company}</p>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <MapPin className="w-4 h-4" />
-                            <span>{match.job_description.location}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className={`text-3xl font-bold mb-1 ${getScoreColor(match.fit_score)}`}>
-                            {match.fit_score}%
-                          </div>
-                          <div className="text-sm text-gray-400">Fit Score</div>
-                        </div>
-                      </div>
+              {/* Detailed Analysis */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Matched Skills */}
+                <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
+                  <h4 className="font-black tracking-tighter uppercase mb-4 text-emerald-400 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5" />
+                    Matched Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisResult.job_fit_analysis.matched_skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-emerald-400/10 border border-emerald-400/30 rounded-full text-xs text-emerald-300"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <span className="text-sm text-gray-400">Skill Match: </span>
-                          <span className={`font-semibold ${getScoreColor(match.skill_match)}`}>
-                            {match.skill_match}%
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-400">Experience Match: </span>
-                          <span className={`font-semibold ${getScoreColor(match.experience_match)}`}>
-                            {match.experience_match}%
-                          </span>
-                        </div>
-                      </div>
+                {/* Missing Skills */}
+                <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
+                  <h4 className="font-black tracking-tighter uppercase mb-4 text-red-400 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Skills to Develop
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisResult.job_fit_analysis.missing_skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-red-400/10 border border-red-400/30 rounded-full text-xs text-red-300"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {analysisResult.job_fit_analysis.missing_skills.length === 0 && (
+                      <span className="text-emerald-400 text-sm">No missing skills identified!</span>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                      <div className="mb-4 p-3 bg-slate-700/30 rounded-lg">
-                        <span className="text-sm font-medium text-emerald-400">Suitability: </span>
-                        <span className="text-sm text-gray-300">{match.suitability}</span>
+              {/* Next Steps */}
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
+                <h4 className="font-black tracking-tighter uppercase mb-4 text-sky-400 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Recommended Next Steps
+                </h4>
+                <div className="space-y-3">
+                  {analysisResult.next_steps.map((step, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-slate-700/30 rounded-xl">
+                      <div className="w-6 h-6 bg-sky-400/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-sky-400">{index + 1}</span>
                       </div>
-
-                      {match.missing_skills.length > 0 && (
-                        <div className="mb-4">
-                          <span className="text-sm font-medium text-red-400">Skills to develop: </span>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {match.missing_skills.map((skill, i) => (
-                              <span key={i} className="px-2 py-1 bg-red-400/10 text-red-300 rounded text-xs">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div>
-                        <span className="text-sm font-medium text-sky-400">Recommendations: </span>
-                        <div className="mt-2 space-y-1">
-                          {match.recommendations.map((rec, i) => (
-                            <div key={i} className="flex items-start gap-2">
-                              <ArrowRight className="w-3 h-3 text-sky-400 mt-1 flex-shrink-0" />
-                              <span className="text-xs text-gray-300">{rec}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <span className="text-sm text-gray-300">{step}</span>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={handleStartOver}
+                  className="px-6 py-3 bg-gray-600/30 hover:bg-gray-600/50 rounded-xl font-medium transition-all"
+                >
+                  Analyze Another Role
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 rounded-xl font-black tracking-tighter uppercase transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
             </div>
           )}
-
-          {/* Back to Dashboard */}
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-semibold transition-colors"
-            >
-              Back to Dashboard
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
         </div>
       </div>
     </Layout>

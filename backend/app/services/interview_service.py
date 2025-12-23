@@ -8,16 +8,13 @@ from app.models.response import Response
 from app.models.report import Report
 from app.schemas.interview_schema import InterviewCreate
 from app.schemas.analysis_schema import AnswerSubmission, AnalysisResult
-from app.ai_engines.scoring_engine import ScoringEngine
-from app.ai_engines.behavioral_engine import BehavioralEngine
-from app.ai_engines import cloud_llm_engine
+from app.ai_engines.gemini_engine import GeminiEngine
 from app.services.question_service import get_question_service
 
 class InterviewService:
     def __init__(self, db: Session):
         self.db = db
-        self.scoring_engine = ScoringEngine()
-        self.behavioral_engine = BehavioralEngine()
+        self.gemini_engine = GeminiEngine()
 
     def create_interview(self, interview_data: InterviewCreate):
         """Create a new interview session"""
@@ -206,9 +203,11 @@ class InterviewService:
             for resp in responses[-3:]:  # Last 3 exchanges
                 conversation_history.append((resp.question, resp.answer_text))
 
-            # Generate interviewer response
-            interviewer_response = cloud_llm_engine.generate_interviewer_response(
-                question, answer, conversation_history
+            # Generate interviewer response using Gemini
+            interviewer_response = self.gemini_engine.call_gemini(
+                f"Generate a brief professional interviewer response to this answer: {answer}",
+                temperature=0.3,
+                max_tokens=100
             )
 
             return interviewer_response

@@ -73,11 +73,26 @@ def parse_resume_simple(file_path: str) -> dict:
         r'(\d+)\s*(?:years?|yrs?)\s*(?:of)?\s*experience',
         r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:in|of)',
     ]
+    
+    # Also look for months and convert to years
+    month_patterns = [
+        r'(\d+)\s*(?:months?|mos?)\s*(?:of)?\s*experience',
+        r'(\d+)\+?\s*(?:months?|mos?)\s*(?:in|of)',
+    ]
+    
     years_experience = 0
     for pattern in experience_patterns:
         match = re.search(pattern, text_lower)
         if match:
             years_experience = max(years_experience, int(match.group(1)))
+    
+    # Handle months separately and convert to years
+    for pattern in month_patterns:
+        match = re.search(pattern, text_lower)
+        if match:
+            months = int(match.group(1))
+            years_from_months = months / 12.0
+            years_experience = max(years_experience, years_from_months)
     
     # Calculate from dates if available
     current_year = datetime.now().year

@@ -381,28 +381,28 @@ const Report = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white">
+      <div className="min-h-screen bg-[#020617] text-white">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Header */}
-      <div className="relative border-b border-white/10 backdrop-blur-xl bg-slate-900/50">
+      <div className="relative border-b border-white/10 backdrop-blur-3xl bg-white/[0.03]">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-white/10 rounded-lg transition-all duration-300"
+                className="p-2 hover:bg-white/10 rounded-2xl transition-all duration-300"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold">Interview Performance Report</h1>
+                <h1 className="text-2xl font-black tracking-tighter uppercase bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Interview Performance Report</h1>
                 {interviewData && (
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-slate-400 mt-1 font-medium">
                   {interviewData.type} • {interviewData.role} • {interviewData.date}
                 </p>
                 )}

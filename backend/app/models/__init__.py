@@ -1,8 +1,7 @@
 # backend/app/models/__init__.py
-from .user import User
 from .interview import Interview
 from .response import Response
 from .report import Report
 from .resume import Resume
 
-__all__ = ["User", "Interview", "Response", "Report", "Resume"]
+__all__ = ["Interview", "Response", "Report", "Resume"]

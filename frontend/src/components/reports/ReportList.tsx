@@ -119,22 +119,22 @@ const ReportList: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white pb-20 px-6 -mt-20">
+      <div className="min-h-screen bg-[#020617] text-white pb-20 px-6 -mt-20">
         {/* Animated Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-400/15 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6 text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-3">
-              <span className="bg-gradient-to-r from-white via-sky-100 to-cyan-200 bg-clip-text text-transparent">
+            <h1 className="text-6xl md:text-7xl font-black tracking-tighter uppercase mb-3">
+              <span className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
                 Interview Reports
               </span>
             </h1>
-            <p className="text-xl text-gray-400">
+            <p className="text-xl text-slate-400 font-medium">
               Review your past interview performances and track your progress
             </p>
           </div>

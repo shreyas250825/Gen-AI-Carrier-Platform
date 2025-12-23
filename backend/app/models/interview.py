@@ -1,14 +1,12 @@
 # backend/app/models/interview.py
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Float
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from app.database import Base
 
 class Interview(Base):
     __tablename__ = "interviews"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     session_id = Column(String, unique=True, index=True)
     
     # Interview configuration
@@ -24,6 +22,3 @@ class Interview(Base):
     # Timestamps
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
-    
-    # Relationships
-    user = relationship("User", backref="interviews")

@@ -1,13 +1,15 @@
 # backend/app/routes/interview_routes.py
 from typing import Any, Dict, List, Optional
 from datetime import datetime
+import logging
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import uuid
 
-from app.ai_engines.gemini_engine import GeminiEngine
+from app.ai_engines.engine_router import ai_engine_router
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -15,7 +17,6 @@ class StartReq(BaseModel):
   profile: Dict[str, Any]
   role: Optional[str] = None
   interview_type: Optional[str] = "mixed"
-  persona: Optional[str] = "male"
 
 
 class StartRes(BaseModel):
@@ -32,14 +33,7 @@ class AnswerReq(BaseModel):
 
 class AnswerRes(BaseModel):
   evaluation: Dict[str, Any]
-  improved: str
   next_question: Optional[Dict[str, Any]] = None
-
-
-class MetricsReq(BaseModel):
-  session_id: Optional[str] = None
-  question_id: Optional[str] = None
-  metrics: Dict[str, Any]
 
 
 class ReportRes(BaseModel):
@@ -61,7 +55,6 @@ class ReportListItem(BaseModel):
   overall_score: float
   technical_score: float
   communication_score: float
-  confidence_score: float
   questions_count: int
 
 
@@ -69,44 +62,41 @@ class ReportListRes(BaseModel):
   reports: List[ReportListItem]
 
 
+# In-memory session storage
 SESSIONS: Dict[str, Dict[str, Any]] = {}
-
-# Initialize Gemini engine
-gemini_engine = GeminiEngine()
 
 
 @router.post("/interview/start", response_model=StartRes)
 def start(req: StartReq) -> StartRes:
+  """
+  Start interview with three-layer intelligence architecture:
+  Layer 1: Extract candidate context from resume
+  Layer 2: Generate first question based on context
+  """
   session_id = str(uuid.uuid4())
 
   # Use role from request or profile
   role = req.role or req.profile.get("role") or req.profile.get("estimated_role") or "Software Engineer"
   interview_type = req.interview_type or "mixed"
-  persona = req.persona or "male"
   
-  # Update profile with role
-  profile = req.profile.copy()
-  profile["role"] = role
-  profile["interview_type"] = interview_type
-  profile["persona"] = persona
-
-  # Generate first question using Gemini engine
-  first_question = gemini_engine.generate_first_question(
-      profile=profile,
-      persona=persona,
+  # LAYER 1: CONTEXT INTELLIGENCE - Extract candidate context
+  candidate_context = ai_engine_router.extract_candidate_context(
+      resume_data=req.profile,
+      role=role,
       interview_type=interview_type
   )
 
+  # LAYER 2: CONVERSATIONAL INTELLIGENCE - Generate first question
+  first_question = ai_engine_router.generate_first_question(candidate_context)
+
+  # Store session with candidate context
   SESSIONS[session_id] = {
-    "profile": profile,
-    "interview_type": interview_type,
-    "persona": persona,
+    "candidate_context": candidate_context,
     "conversation_history": [],
     "current_question_number": 1,
     "answers": [],
     "evaluations": [],
     "created_at": datetime.utcnow().isoformat(),
-    "role": role,
     "started_at": datetime.utcnow().isoformat(),
   }
 
@@ -115,36 +105,34 @@ def start(req: StartReq) -> StartRes:
 
 @router.post("/interview/answer", response_model=AnswerRes)
 def answer(req: AnswerReq) -> AnswerRes:
+  """
+  Process answer with three-layer intelligence:
+  Layer 2: Store answer and generate next adaptive question
+  Layer 3: Evaluate answer quality
+  """
   session = SESSIONS.get(req.session_id)
   if not session:
     raise HTTPException(status_code=404, detail="Session not found")
 
-  # Get current question text from conversation history or generate it
+  candidate_context = session.get("candidate_context", {})
+  
+  # Get current question text from conversation history
   question_text = ""
   if session["conversation_history"]:
-    # Find the last question in conversation history
     for entry in reversed(session["conversation_history"]):
       if entry["type"] == "question":
         question_text = entry["content"]
         break
   
   if not question_text:
-    # This shouldn't happen, but fallback to a generic question
     question_text = "Please tell me about your experience."
 
-  # Evaluate answer using Gemini
-  eval_res = gemini_engine.evaluate_answer(
+  # LAYER 3: EVALUATION INTELLIGENCE - Evaluate answer
+  evaluation = ai_engine_router.evaluate_answer(
       question_text=question_text,
       answer=req.transcript,
-      profile=session.get("profile", {}),
+      candidate_context=candidate_context,
       conversation_history=session.get("conversation_history", [])
-  )
-  
-  # Generate improved answer using Gemini
-  improved = gemini_engine.improve_answer(
-      question_text=question_text,
-      answer=req.transcript,
-      profile=session.get("profile", {})
   )
 
   # Add question and answer to conversation history
@@ -158,8 +146,7 @@ def answer(req: AnswerReq) -> AnswerRes:
       "type": "answer", 
       "content": req.transcript,
       "question_number": session["current_question_number"],
-      "evaluation": eval_res,
-      "improved": improved
+      "evaluation": evaluation
     }
   ])
 
@@ -168,95 +155,75 @@ def answer(req: AnswerReq) -> AnswerRes:
     "question": question_text,
     "transcript": req.transcript,
     "metrics": req.metrics,
-    "evaluation": eval_res,
-    "improved": improved,
+    "evaluation": evaluation,
   })
-  session["evaluations"].append(eval_res)
+  session["evaluations"].append(evaluation)
 
-  # Generate next question if we haven't reached 8 questions yet
-  next_q: Optional[Dict[str, Any]] = None
+  # LAYER 2: CONVERSATIONAL INTELLIGENCE - Generate next adaptive question
+  next_question: Optional[Dict[str, Any]] = None
   if session["current_question_number"] < 8:
     session["current_question_number"] += 1
-    next_q = gemini_engine.generate_next_question(
-        profile=session.get("profile", {}),
+    next_question = ai_engine_router.generate_next_question(
+        candidate_context=candidate_context,
         conversation_history=session["conversation_history"],
         question_number=session["current_question_number"]
     )
 
-  return AnswerRes(evaluation=eval_res, improved=improved, next_question=next_q)
-
-
-@router.post("/metrics")
-def store_metrics(req: MetricsReq) -> Dict[str, str]:
-  # Optional endpoint; we also store metrics in /answer.
-  session = SESSIONS.get(req.session_id) if req.session_id else None
-  if session:
-    session.setdefault("extra_metrics", []).append(
-      {"question_id": req.question_id, "metrics": req.metrics}
-    )
-  return {"status": "ok"}
+  return AnswerRes(evaluation=evaluation, next_question=next_question)
 
 
 @router.get("/interview/report/{session_id}", response_model=ReportRes)
 def report(session_id: str) -> ReportRes:
+  """
+  Generate final report using Layer 3: Evaluation & Job Intelligence
+  """
   session = SESSIONS.get(session_id)
   if not session:
     raise HTTPException(status_code=404, detail="Session not found")
 
-  evals: List[Dict[str, Any]] = session.get("evaluations", [])
+  candidate_context = session.get("candidate_context", {})
+  conversation_history = session.get("conversation_history", [])
+  evaluations = session.get("evaluations", [])
   
-  # Generate final report using Gemini
+  # LAYER 3: EVALUATION INTELLIGENCE - Generate final report
   try:
-    report_data = gemini_engine.generate_final_report(session)
+    report_data = ai_engine_router.generate_final_report(
+        candidate_context=candidate_context,
+        conversation_history=conversation_history,
+        evaluations=evaluations
+    )
     summary = report_data.get("overall_summary", "")
-    if not summary:
-      # Fallback to simple summary
-      if evals:
-        tech = sum(e.get("technical", 0) for e in evals) / len(evals)
-        comm = sum(e.get("communication", 0) for e in evals) / len(evals)
-        conf = sum(e.get("confidence", 0) for e in evals) / len(evals)
-        summary = (
-          f"Average technical score: {tech:.1f}. "
-          f"Average communication score: {comm:.1f}. "
-          f"Average confidence score: {conf:.1f}."
-        )
-      else:
-        summary = "No answers recorded for this session."
   except Exception as e:
-    print(f"Error generating final report: {e}")
-    # Fallback to simple summary
-    if evals:
-      tech = sum(e.get("technical", 0) for e in evals) / len(evals)
-      comm = sum(e.get("communication", 0) for e in evals) / len(evals)
-      conf = sum(e.get("confidence", 0) for e in evals) / len(evals)
-      summary = (
-        f"Average technical score: {tech:.1f}. "
-        f"Average communication score: {comm:.1f}. "
-        f"Average confidence score: {conf:.1f}."
-      )
+    logger.error(f"Error generating final report: {e}")
+    # Fallback summary
+    if evaluations:
+      tech = sum(e.get("technical", 0) for e in evaluations) / len(evaluations)
+      comm = sum(e.get("communication", 0) for e in evaluations) / len(evaluations)
+      rel = sum(e.get("relevance", 0) for e in evaluations) / len(evaluations)
+      summary = f"Average scores: Technical {tech:.1f}%, Communication {comm:.1f}%, Relevance {rel:.1f}%."
     else:
       summary = "No answers recorded for this session."
 
-  # Convert conversation history to questions format for compatibility
+  # Convert conversation history to questions format
   questions = []
-  for entry in session.get("conversation_history", []):
+  for entry in conversation_history:
     if entry["type"] == "question":
       questions.append({
         "id": f"q{entry['question_number']}",
         "text": entry["content"],
         "type": "conversational",
-        "difficulty": "medium"
+        "difficulty": "adaptive"
       })
 
   return ReportRes(
     session_id=session_id,
     questions=questions,
-    evaluations=evals,
+    evaluations=evaluations,
     answers=session.get("answers", []),
     summary=summary,
-    interview_type=session.get("interview_type"),
+    interview_type=candidate_context.get("interview_type"),
     created_at=session.get("created_at"),
-    role=session.get("role"),
+    role=candidate_context.get("role"),
   )
 
 
@@ -266,32 +233,32 @@ def list_reports() -> ReportListRes:
   reports = []
   
   for session_id, session in SESSIONS.items():
-    evals = session.get("evaluations", [])
+    evaluations = session.get("evaluations", [])
+    candidate_context = session.get("candidate_context", {})
     
-    if evals:
-      tech = sum(e.get("technical", 0) for e in evals) / len(evals)
-      comm = sum(e.get("communication", 0) for e in evals) / len(evals)
-      conf = sum(e.get("confidence", 0) for e in evals) / len(evals)
-      overall = (tech + comm + conf) / 3
+    if evaluations:
+      tech = sum(e.get("technical", 0) for e in evaluations) / len(evaluations)
+      comm = sum(e.get("communication", 0) for e in evaluations) / len(evaluations)
+      rel = sum(e.get("relevance", 0) for e in evaluations) / len(evaluations)
+      overall = (tech + comm + rel) / 3
     else:
-      tech = comm = conf = overall = 0.0
+      tech = comm = rel = overall = 0.0
     
     # Count questions from conversation history
     question_count = len([entry for entry in session.get("conversation_history", []) if entry["type"] == "question"])
     
     reports.append(ReportListItem(
       session_id=session_id,
-      role=session.get("role", "Software Engineer"),
-      interview_type=session.get("interview_type", "mixed"),
+      role=candidate_context.get("role", "Software Engineer"),
+      interview_type=candidate_context.get("interview_type", "mixed"),
       created_at=session.get("created_at", datetime.utcnow().isoformat()),
       overall_score=overall,
       technical_score=tech,
       communication_score=comm,
-      confidence_score=conf,
       questions_count=question_count
     ))
   
-  # Sort by created_at descending (most recent first)
+  # Sort by created_at descending
   reports.sort(key=lambda x: x.created_at, reverse=True)
   
   return ReportListRes(reports=reports)

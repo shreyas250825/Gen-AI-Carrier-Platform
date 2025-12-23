@@ -2,109 +2,392 @@
 
 ### AWS ImpactX Challenge – IIT Bombay TechFest Finals
 
-An AI-powered, cloud-native interview and career intelligence platform built using **AWS Generative AI services** to help candidates prepare for interviews, assess job readiness, and improve employability through real-time feedback and adaptive evaluation.
+An AI-powered, cloud-native interview and career intelligence platform built using **Ollama Local AI** with **Gemini AI fallback** and **AWS S3 + MongoDB Atlas** to help candidates prepare for interviews, assess job readiness, and improve employability through real-time feedback and adaptive evaluation.
 
 ---
 
 ## 🚀 Overview
 
-The **GenAI Career Intelligence Platform** simulates real-world interview scenarios by combining Generative AI, resume intelligence, behavioral analysis, and technical assessment. Designed for scalability and impact, the platform leverages AWS services to deliver secure, low-latency, and adaptive interview experiences.
+The **GenAI Career Intelligence Platform** simulates real-world interview scenarios by combining Local AI (Ollama), resume intelligence, behavioral analysis, and technical assessment. The platform features a **conversational interview system** and **dynamic job fit analysis** that creates natural and adaptive experiences powered by local AI for privacy and cost-effectiveness.
 
 ---
 
-## ✨ Key Features (Powered by AWS & Generative AI)
+## ✨ Key Features (Powered by Ollama + AWS)
 
-- **AI-Driven Interview Question Generation**  
-  Generates role-specific and experience-aware interview questions using Generative AI models deployed on AWS.
+- **🤖 Conversational Interview System**  
+  Dynamic 8-question interview flow where each question builds naturally on previous responses using Ollama local AI with Gemini fallback.
 
-- **Real-Time Answer Evaluation & Scoring**  
-  Provides instant, structured feedback and scoring on candidate responses through AWS-based inference pipelines.
+- **🎯 Dynamic Job Fit Analysis (NEW)**  
+  Step-by-step workflow: Upload resume → Select/type role → Get AI-powered analysis with comprehensive recommendations.
 
-- **Intelligent Resume Parsing & Analysis**  
-  Automatically extracts, structures, and analyzes resume data using AWS text analytics services.
+- **📊 Real-Time Answer Evaluation & Scoring**  
+  Instant feedback with technical, communication, confidence, and relevance scoring using advanced AI analysis.
 
-- **Behavioral & Communication Assessment**  
-  Evaluates facial expressions, tone, and speech patterns during interviews using AWS vision and media services.
+- **📄 Enhanced Resume Parsing & Analysis**  
+  Advanced parsing with 500+ technical keywords, accurate experience calculation (months/years), and comprehensive skill extraction.
 
-- **Technical & Coding Skill Evaluation**  
-  Assesses technical knowledge and problem-solving skills through secure AWS execution environments.
+- **🎯 Aptitude & Logical Reasoning Assessment**  
+  Comprehensive aptitude testing with quantitative, logical, pattern recognition, and analytical questions.
 
-- **Adaptive Interview Flow**  
-  Dynamically adjusts question difficulty and interview direction based on real-time candidate performance.
+- **💼 50+ Role Support + Custom Roles**  
+  Predefined roles across all tech domains OR custom role input for personalized analysis.
 
-- **Detailed Performance Reports**  
-  Generates comprehensive post-interview reports highlighting strengths, gaps, and improvement suggestions.
+- **📈 Adaptive Interview Flow**  
+  Questions dynamically adjust based on candidate responses, role requirements, and conversation context.
 
-- **Interview Session Recording & Playback**  
-  Securely records and stores interview sessions on AWS for review, analysis, and mentoring.
+- **📋 Comprehensive Performance Reports**  
+  Detailed post-interview analysis with strengths, gaps, improvement suggestions, and career guidance.
 
-- **Multi-Modal Interaction Support**  
-  Supports both voice and text-based interactions using AWS speech-to-text and text-to-speech services.
+- **🔄 Intelligent AI Architecture**  
+  - **Primary**: Ollama Local AI (Privacy-focused, cost-effective)
+  - **Fallback**: Gemini API (Cloud reliability)
+  - **Deterministic**: Rule-based fallbacks (100% uptime)
 
-- **Aptitude & Logical Reasoning Assessment**  
-  Includes aptitude-based and analytical reasoning questions to evaluate problem-solving ability.
+- **🎨 Modern React Frontend**  
+  Responsive, accessible UI with real-time feedback, step-by-step workflows, and seamless user experience.
 
-- **AI-Based Job Fit & Role Matching**  
-  Matches candidate resumes with job descriptions to generate job-fit scores and role suitability insights.
+- **⚡ High-Performance Backend**  
+  FastAPI-based backend with robust error handling, session management, and comprehensive API documentation.
 
 ---
 
-## 🏗️ AWS-Centric Architecture (High-Level)
+## 🆕 New Dynamic Job Fit Analysis
 
-### Three-Level Intelligence System
-- **Level 1 - Deterministic Intelligence**: Rule-based fallback system (100% uptime)
-- **Level 2 - Local AI Intelligence**: Ollama integration for offline AI capability  
-- **Level 3 - Cloud AI Intelligence**: AWS Bedrock interface (pluggable)
+### **Step-by-Step Workflow (Like Interview Flow)**
+1. **📤 Upload Resume**: Drag & drop or file selection (PDF, DOC, DOCX, TXT)
+2. **🎯 Select Role**: Choose from 50+ predefined roles OR enter custom role
+3. **🤖 AI Analysis**: Ollama processes job fit with real-time progress
+4. **📊 Results**: Comprehensive analysis with scores and recommendations
 
-### AWS Services Integration
-- **Generative AI**: AWS Bedrock (LLMs for question generation and evaluation)  
-- **Backend APIs**: AWS Lambda / FastAPI  
-- **Storage**: Amazon S3 (resumes, videos, reports)  
-- **Speech Services**: Amazon Transcribe & Amazon Polly  
-- **Vision Analysis**: Amazon Rekognition  
-- **Security & Access**: AWS IAM  
-- **Scalability**: Event-driven, serverless-first design
+### **Enhanced Features**
+- **Real-time Parsing**: Advanced skill extraction with 500+ keywords
+- **Smart Role Selection**: Auto-suggest based on resume analysis
+- **Custom Role Support**: Enter any role title for analysis
+- **Comprehensive Scoring**: Overall fit, skill match, experience match
+- **Actionable Insights**: Next steps and career development guidance
 
-### Reliability & Fallback Architecture
-The platform ensures 100% uptime through automatic fallback:
+---
+
+## 🏗️ Simplified AWS Architecture
+
+### **Cloud Services (Minimal & Cost-Effective)**
+- **📦 Amazon S3**: Resume storage, report files, and static assets
+- **🗄️ MongoDB Atlas**: User data, interview sessions, and analytics
+- **🔐 AWS IAM**: Security and access management
+
+### **AI Processing Architecture**
 ```
-Level 3 (AWS Bedrock) → Level 2 (Ollama) → Level 1 (Deterministic)
+Primary: Ollama (Local) → Fallback: Gemini API → Deterministic Rules
 ```
-If cloud AI fails, the system seamlessly falls back to local AI, and ultimately to deterministic algorithms that always work.
+
+### **Benefits of This Architecture**
+- **💰 Cost-Effective**: Minimal AWS services, local AI processing
+- **🔒 Privacy-Focused**: Resume data processed locally with Ollama
+- **⚡ High Performance**: Local AI for faster response times
+- **🛡️ Reliable**: Automatic fallback ensures 100% uptime
+- **📈 Scalable**: Can easily add more AWS services as needed
+
+---
+
+---
+
+## 🎯 Dynamic Job Fit Analysis - Complete Workflow
+
+### **How It Works**
+
+1. **📤 Upload Resume**
+   - Drag & drop or click to select resume file
+   - Supports PDF, DOC, DOCX, TXT formats (up to 10MB)
+   - Real-time parsing with progress indicators
+
+2. **🤖 AI-Powered Parsing**
+   - Extracts 500+ technical skills across all domains
+   - Calculates accurate experience (handles months/years correctly)
+   - Identifies projects, education, and role estimation
+   - Generates comprehensive candidate profile
+
+3. **🎯 Role Selection**
+   - Choose from 50+ predefined roles (Software Engineer to AI Engineer)
+   - OR enter custom role title for personalized analysis
+   - Smart recommendations based on parsed resume
+   - Search and filter functionality
+
+4. **⚡ Ollama AI Analysis**
+   - Local AI processing for privacy and speed
+   - Comprehensive job fit scoring (Overall, Skills, Experience)
+   - Role-specific insights and recommendations
+   - Confidence scoring and next steps
+
+5. **📊 Detailed Results**
+   - Overall fit percentage with color-coded recommendations
+   - Matched skills vs. missing skills analysis
+   - Experience alignment and growth potential
+   - Actionable career development steps
+
+### **API Endpoints**
+```bash
+GET  /api/job-fit/available-roles           # Get 50+ available roles
+POST /api/job-fit/parse-resume              # Parse resume file
+POST /api/job-fit/analyze-with-role         # Analyze job fit with Ollama
+POST /api/job-fit/bulk-role-analysis        # Analyze multiple roles
+```
+
+### **Frontend Integration**
+- Step-by-step workflow UI with progress indicators
+- Real-time file upload and parsing feedback
+- Dynamic role selection with search capabilities
+- Comprehensive results display with actionable insights
+
+---
+
+## 🚀 Quick Start & Setup
+
+### **Prerequisites**
+- Python 3.8+ with pip
+- Node.js 16+ with npm
+- Ollama installed locally ([Installation Guide](https://ollama.ai))
+- Git for version control
+
+### **1. Ollama Setup (Required for AI Analysis)**
+```bash
+# Install Ollama (macOS/Linux)
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Windows: Download from https://ollama.ai/download
+
+# Pull required model
+ollama pull llama3.1:8b
+
+# Verify installation
+ollama list
+```
+
+### **2. Project Setup**
+```bash
+# Clone repository
+git clone <repository-url>
+cd gen-ai-carrier-platform
+
+# Backend setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Create database tables
+python create_tables.py
+
+# Frontend setup
+cd ../frontend
+npm install
+```
+
+### **3. Environment Configuration**
+```bash
+# Backend environment (.env)
+cd backend
+cp .env.example .env
+
+# Configure these variables:
+GEMINI_API_KEY=your_gemini_api_key_here  # For fallback
+OLLAMA_BASE_URL=http://localhost:11434   # Local Ollama
+DATABASE_URL=sqlite:///./interview.db    # Local database
+```
+
+### **4. Run Development Environment**
+```bash
+# Terminal 1: Start Ollama (if not running as service)
+ollama serve
+
+# Terminal 2: Start Backend
+cd backend
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Terminal 3: Start Frontend  
+cd frontend
+npm run dev
+
+# Access application at http://localhost:3000
+```
+
+### **5. Test the System**
+```bash
+# Test dynamic job fit analysis
+cd backend
+python test_dynamic_job_fit.py
+
+# Test complete system
+python test_integration.py
+
+# Check AI engine status
+python check_status.py
+```
+
+---
+
+## 📁 Project Structure
+
+```
+gen-ai-carrier-platform/
+├── 📚 docs/                    # Documentation
+│   ├── README.md              # Documentation hub
+│   ├── ollama-setup.md        # Ollama integration guide
+│   └── aws-architecture.md    # AWS deployment guide
+├── 🧪 tests/                   # Testing files
+│   ├── README.md              # Testing guide
+│   └── test_complete_system.py
+├── 🖥️ backend/                 # FastAPI backend
+│   ├── app/
+│   │   ├── ai_engines/        # Ollama + Gemini AI integration
+│   │   │   ├── ollama_engine.py      # Local AI processing
+│   │   │   ├── gemini_engine.py      # Cloud AI fallback
+│   │   │   └── engine_router.py      # Intelligent AI routing
+│   │   ├── routes/            # API endpoints
+│   │   │   ├── job_fit_routes.py     # Dynamic job fit analysis
+│   │   │   ├── interview_routes.py   # Interview management
+│   │   │   └── resume_routes.py      # Resume processing
+│   │   ├── services/          # Business logic
+│   │   │   └── resume_service.py     # Enhanced resume parsing
+│   │   └── schemas/           # Data models
+│   ├── test_dynamic_job_fit.py       # Job fit testing
+│   ├── check_status.py               # AI engine status
+│   └── requirements.txt
+├── 🎨 frontend/                # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── jobfit/               # Dynamic job fit UI
+│   │   │   │   └── JobFitAnalysis.tsx
+│   │   │   ├── interview/            # Interview interface
+│   │   │   ├── dashboard/            # User dashboard
+│   │   │   └── common/               # Shared components
+│   │   └── styles/            # Modern design system
+│   └── package.json
+├── 📄 DYNAMIC_JOB_FIT_COMPLETE.md   # Feature documentation
+└── 📄 README.md               # This file
+```
+
+---
+
+## 🚀 Quick Start
+
+### **📖 For Documentation**
+- **[📚 Documentation Hub](./docs/README.md)** - Complete documentation index
+- **[🎯 Getting Started Guide](./docs/start.md)** - Setup and installation
+- **[✅ Migration Complete](./docs/GEMINI_MIGRATION_COMPLETE.md)** - Latest system updates
+
+### **🧪 For Testing**
+- **[🧪 Testing Suite](./tests/README.md)** - Complete testing guide
+- **[🚀 System Test](./tests/test_complete_system.py)** - Run comprehensive system test
+- **[🤖 AI Integration Test](./tests/test_gemini_integration.py)** - Test AI functionality
+
+### **⚡ Quick Commands**
+```bash
+# Test the dynamic job fit system
+python backend/test_dynamic_job_fit.py
+
+# Test complete system functionality
+python tests/test_complete_system.py
+
+# Start backend server (with Ollama integration)
+cd backend && python -m uvicorn app.main:app --reload
+
+# Start frontend (with new job fit UI)
+cd frontend && npm start
+
+# Check Ollama status and AI engine routing
+python backend/check_status.py
+```
+
+---
+
+## 🏗️ AWS-Centric Architecture (Simplified & Cost-Effective)
+
+### **Intelligent AI Processing**
+- **Primary AI**: Ollama Local AI (Privacy-focused, cost-effective)
+- **Fallback AI**: Gemini API (Cloud reliability when local AI unavailable)
+- **Deterministic**: Rule-based responses (100% uptime guarantee)
+
+### **AWS Services (Minimal Setup)**
+- **📦 Amazon S3**: 
+  - Resume file storage (PDF, DOC, DOCX, TXT)
+  - Interview report storage
+  - Static asset hosting
+- **🗄️ MongoDB Atlas**: 
+  - User profiles and authentication
+  - Interview session data
+  - Analytics and performance metrics
+- **🔐 AWS IAM**: 
+  - Security and access management
+  - S3 bucket permissions
+
+### **Architecture Benefits**
+- **💰 Cost-Effective**: Only 2 AWS services needed
+- **🔒 Privacy-First**: Local AI processing keeps data secure
+- **⚡ High Performance**: Local AI for faster response times
+- **🛡️ 100% Uptime**: Automatic fallback system
+- **📈 Scalable**: Easy to add more AWS services later
+
+### **Reliability & Fallback System**
+```
+Ollama (Local AI) → Gemini API (Cloud) → Deterministic Rules
+```
+If local AI fails, system automatically falls back to cloud AI, and ultimately to deterministic algorithms that always work.
 
 ---
 
 ## 🎯 Use Cases
 
-- Interview preparation for students and job seekers  
-- Campus placement readiness assessment  
-- Career guidance and skill-gap analysis  
-- AI-driven mock interviews for institutions and enterprises  
+- **Interview Preparation**: AI-powered mock interviews for students and job seekers
+- **Job Fit Analysis**: Dynamic resume analysis against 50+ roles or custom positions  
+- **Campus Placement**: Readiness assessment for university placement programs
+- **Career Guidance**: Skill-gap analysis and personalized development recommendations
+- **Enterprise Hiring**: AI-driven candidate evaluation for institutions and companies
+- **Skill Development**: Identify missing skills and get actionable learning paths
 
 ---
 
-## 🌍 Impact
+## 🌍 Impact & Benefits
 
-- Improves interview readiness and confidence  
-- Bridges the gap between resumes and real-world job expectations  
-- Scales interview preparation using responsible Generative AI  
-- Supports inclusive, accessible, and data-driven employability solutions  
+### **For Job Seekers**
+- **🎯 Personalized Analysis**: AI-powered job fit analysis for any role
+- **📈 Skill Development**: Identify gaps and get learning recommendations
+- **🎤 Interview Practice**: Realistic mock interviews with instant feedback
+- **🔒 Privacy Protection**: Local AI processing keeps resume data secure
+
+### **For Organizations**
+- **💰 Cost Reduction**: Local AI processing reduces API costs
+- **⚡ Fast Processing**: Local AI for immediate candidate evaluation
+- **📊 Comprehensive Insights**: Detailed candidate assessment and recommendations
+- **🔄 Scalable Solution**: Handle multiple candidates simultaneously
+
+### **Technical Benefits**
+- **🛡️ 100% Uptime**: Automatic fallback ensures continuous service
+- **🔒 Data Privacy**: Resume processing stays local with Ollama
+- **💸 Cost Effective**: Minimal AWS services (S3 + MongoDB only)
+- **⚡ High Performance**: Local AI for faster response times  
 
 ---
 
 ## 🧪 Current Status
 
-- ✅ **Three-Level Intelligence Architecture implemented**
-  - Level 1: Deterministic Intelligence (100% reliable fallback)
-  - Level 2: Local AI Intelligence (Ollama integration)
-  - Level 3: Cloud AI Intelligence (AWS Bedrock interface)
-- ✅ **Functional AI interview flow with automatic fallback**
-- ✅ **Resume parsing and job-fit analysis implemented**
-- ✅ **Real-time feedback engine integrated**
-- ✅ **NEW: Aptitude & Logical Reasoning Assessment**
-- ✅ **NEW: AI-Based Job Fit & Role Matching**
-- 🔄 **AWS-based deployment architecture documented**
-- 🔄 **Kiro.dev development environment ready**
+- ✅ **Dynamic Job Fit Analysis implemented**
+  - Step-by-step workflow (Upload → Select Role → AI Analysis → Results)
+  - 50+ predefined roles + custom role support
+  - Real-time resume parsing with 500+ technical keywords
+  - Ollama-powered AI analysis with comprehensive scoring
+- ✅ **Intelligent AI Architecture with automatic fallback**
+  - Primary: Ollama Local AI (privacy-focused, cost-effective)
+  - Fallback: Gemini API (cloud reliability)
+  - Deterministic: Rule-based responses (100% uptime)
+- ✅ **Enhanced resume parsing and job-fit analysis**
+  - Advanced skill extraction and experience calculation
+  - Accurate months/years conversion (fixed 4 months = 0.33 years)
+  - Role estimation and comprehensive profile generation
+- ✅ **Real-time feedback engine with comprehensive scoring**
+- ✅ **Aptitude & Logical Reasoning Assessment**
+- ✅ **Modern React frontend with step-by-step workflows**
+- ✅ **Simplified AWS architecture (S3 + MongoDB Atlas)**
+- 🔄 **Production deployment ready**
 
 ---
 
@@ -129,10 +412,13 @@ Submissions will be evaluated by a panel of experts based on the following crite
 
 ## 📌 Future Enhancements
 
-- Personalized learning pathways based on interview performance  
-- Institution-level dashboards and analytics  
-- Multilingual interview support  
-- Enterprise hiring workflow integration
+- **🌐 Multi-language Support**: Interviews and analysis in multiple languages
+- **🏢 Enterprise Dashboard**: Institution-level analytics and candidate management  
+- **📚 Learning Pathways**: Personalized skill development based on job fit analysis
+- **🤝 Integration APIs**: Connect with ATS systems and HR platforms
+- **📱 Mobile Application**: Native mobile app for on-the-go interview practice
+- **🎥 Video Analysis**: Advanced behavioral analysis using computer vision
+- **🔊 Voice Analysis**: Speech pattern and communication skill assessment
 
 ## Project Structure
 
@@ -418,14 +704,29 @@ The API provides comprehensive endpoints for managing interviews, reports, and r
 - **Performance Metrics**: Real-time performance tracking
 - **Historical Reports**: Access previous interview sessions
 
-## Usage
+## 💻 Usage Guide
 
-1. **User Registration**: Create account and set up profile
-2. **Resume Upload**: Upload resume for initial analysis
-3. **Interview Setup**: Select role and experience level
-4. **Interview Session**: Answer AI-generated questions
-5. **Real-time Feedback**: Receive immediate analysis and suggestions
-6. **Final Report**: Review comprehensive performance report
+### **Dynamic Job Fit Analysis**
+1. **Access**: Navigate to "Job Fit Analysis" from dashboard or navbar
+2. **Upload**: Drag & drop your resume or click to select file
+3. **Parse**: Wait for AI to extract skills, experience, and profile data
+4. **Select Role**: Choose from 50+ roles or enter custom role title
+5. **Analyze**: Ollama AI processes job fit (30-60 seconds)
+6. **Results**: Review comprehensive analysis with actionable recommendations
+
+### **Interview Practice**
+1. **Setup**: Create profile and upload resume for context
+2. **Configure**: Select role, experience level, and interview type
+3. **Interview**: Answer AI-generated questions with real-time feedback
+4. **Evaluation**: Receive instant scoring and improvement suggestions
+5. **Report**: Access detailed performance analysis and career guidance
+
+### **Key Features**
+- **🔒 Privacy-First**: Resume data processed locally with Ollama
+- **⚡ Real-Time**: Instant feedback and progress indicators
+- **🎯 Personalized**: Analysis tailored to specific roles and experience
+- **📊 Comprehensive**: Detailed scoring and actionable recommendations
+- **🛡️ Reliable**: Automatic fallback ensures continuous service
 
 ## Development
 
@@ -466,10 +767,19 @@ cd frontend && npm run lint
 
 This project is developed for academic, research, and hackathon purposes. Commercial usage is subject to licensing and approval.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Built with FastAPI and React
-- AI capabilities powered by AWS Generative AI services
-- UI components styled with Tailwind CSS
-- Icons from Lucide React
-- Developed for AWS ImpactX Challenge – IIT Bombay TechFest
+- **AI Processing**: Powered by Ollama local AI with Gemini API fallback
+- **Backend Framework**: Built with FastAPI for high-performance APIs
+- **Frontend Framework**: React 18 with TypeScript for modern UI
+- **Cloud Infrastructure**: AWS S3 for storage, MongoDB Atlas for data
+- **UI Components**: Styled with Tailwind CSS and Lucide React icons
+- **Development Environment**: Optimized for Kiro.dev platform
+- **Challenge**: Developed for AWS ImpactX Challenge – IIT Bombay TechFest
+
+### **Technology Stack**
+- **🤖 AI**: Ollama (Primary) + Gemini API (Fallback)
+- **☁️ Cloud**: AWS S3 + MongoDB Atlas (Minimal setup)
+- **🖥️ Backend**: FastAPI + SQLAlchemy + Pydantic
+- **🎨 Frontend**: React + TypeScript + Tailwind CSS
+- **🔧 DevOps**: Docker + Docker Compose + Makefile

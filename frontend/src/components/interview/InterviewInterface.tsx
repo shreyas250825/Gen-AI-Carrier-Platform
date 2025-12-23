@@ -358,13 +358,13 @@ const InterviewInterface: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white">
+    <div className="min-h-screen bg-[#020617] text-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:py-8">
 
         {/* Main 2-column layout – equal ratio, full height */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 items-stretch">
           {/* LEFT: Interviewer avatar + question */}
-          <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur-xl p-6 md:p-8">
+          <div className="flex h-full flex-col rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-3xl p-6 md:p-8">
             {/* Top: avatar centered */}
             <div className="flex-1 flex items-center justify-center">
               <HumanAvatar
@@ -405,7 +405,7 @@ const InterviewInterface: React.FC = () => {
           </div>
 
           {/* RIGHT: User video + transcript + camera button */}
-          <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur-xl p-6 md:p-7">
+          <div className="flex h-full flex-col rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-3xl p-6 md:p-7">
             {/* Header row */}
             <div className="mb-4 flex items-center justify-between gap-3">
               <h3 className="text-lg md:text-xl font-semibold text-white">Your Video</h3>
