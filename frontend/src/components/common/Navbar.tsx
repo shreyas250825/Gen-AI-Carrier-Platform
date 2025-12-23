@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, BarChart3, Home, Menu, X, Target, Brain } from 'lucide-react';
+import { Mic, BarChart3, Home, Menu, X, Target, Brain, Zap } from 'lucide-react';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ const Navbar = () => {
     if (path.startsWith('/reports') || path.startsWith('/report')) return 'reports';
     if (path.startsWith('/job-fit')) return 'jobfit';
     if (path.startsWith('/aptitude')) return 'aptitude';
+    if (path.startsWith('/demo')) return 'demo';
     // if (path.startsWith('/about')) return 'about';
     return '';
   };
@@ -43,6 +44,7 @@ const Navbar = () => {
     { id: 'aptitude', label: 'Aptitude', icon: Brain, href: '/aptitude' },
     { id: 'jobfit', label: 'Job Fit', icon: Target, href: '/job-fit' },
     { id: 'reports', label: 'Report', icon: BarChart3, href: '/reports' },
+    { id: 'demo', label: 'AWS Demo', icon: Zap, href: '/demo' },
     // { id: 'about', label: 'About', icon: Info, href: '/about' }
   ];
 

@@ -13,6 +13,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import AboutPage from './components/about/AboutPage';
 import AptitudeAssessment from './components/aptitude/AptitudeAssessment';
 import JobFitAnalysis from './components/jobfit/JobFitAnalysis';
+import DemoShowcase from './components/demo/DemoShowcase';
 
 function App() {
   // Disable automatic scroll restoration
@@ -40,6 +41,7 @@ function App() {
         <Route path="/reports/:sessionId" element={<Layout><ReportViewer /></Layout>} />
         <Route path="/aptitude" element={<AptitudeAssessment />} />
         <Route path="/job-fit" element={<JobFitAnalysis />} />
+        <Route path="/demo" element={<DemoShowcase />} />
       </Routes>
     </Router>
   );
