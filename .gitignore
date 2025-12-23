@@ -124,5 +124,5 @@ logs/
 # Static files
 static/
 
-# Inferred models (if any weights are stored)
+# Inferred models (if any weights are stored) and done on 23/12/2025
 inferred_models/
