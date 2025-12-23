@@ -1,12 +1,42 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mic, BarChart3, Home, Menu, X, Target, Brain, Zap } from 'lucide-react';
+import { Mic, BarChart3, Home, Menu, X, Target, Brain, User } from 'lucide-react';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  
+  // Check login status on component mount and listen for changes
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const savedUser = localStorage.getItem('userEmail');
+      if (savedUser) {
+        setIsLoggedIn(true);
+        setUserEmail(savedUser);
+      } else {
+        setIsLoggedIn(false);
+        setUserEmail('');
+      }
+    };
+
+    // Check on mount
+    checkLoginStatus();
+
+    // Listen for storage changes (when user logs in from another tab)
+    window.addEventListener('storage', checkLoginStatus);
+    
+    // Listen for custom login event
+    window.addEventListener('userLoggedIn', checkLoginStatus);
+
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+      window.removeEventListener('userLoggedIn', checkLoginStatus);
+    };
+  }, []);
   
   // Set active link based on current path
   const getActiveLink = () => {
@@ -14,13 +44,16 @@ const Navbar = () => {
     if (path === '/') return 'home';
     if (path.startsWith('/setup') || path.startsWith('/interview')) return 'interview';
     if (path.startsWith('/dashboard')) return 'dashboard';
-    if (path.startsWith('/reports') || path.startsWith('/report')) return 'reports';
+    //if (path.startsWith('/reports') || path.startsWith('/report')) return 'reports';
     if (path.startsWith('/job-fit')) return 'jobfit';
     if (path.startsWith('/aptitude')) return 'aptitude';
-    if (path.startsWith('/demo')) return 'demo';
+    // if (path.startsWith('/demo')) return 'demo';
     // if (path.startsWith('/about')) return 'about';
     return '';
   };
+
+  // Check if current page is interview page
+  const isInterviewPage = location.pathname.startsWith('/interview');
   
   const [activeLink, setActiveLink] = useState(getActiveLink());
   
@@ -41,25 +74,70 @@ const Navbar = () => {
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'interview', label: 'Start Interview', icon: Mic, href: '/setup' },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/dashboard' },
+    //{ id: 'reports', label: 'Reports', icon: FileText, href: '/reports' },
     { id: 'aptitude', label: 'Aptitude', icon: Brain, href: '/aptitude' },
-    { id: 'jobfit', label: 'Job Fit', icon: Target, href: '/job-fit' },
-    { id: 'reports', label: 'Report', icon: BarChart3, href: '/reports' },
-    { id: 'demo', label: 'AWS Demo', icon: Zap, href: '/demo' },
-    // { id: 'about', label: 'About', icon: Info, href: '/about' }
+    { id: 'jobfit', label: 'Job Fit', icon: Target, href: '/job-fit' }
   ];
+
+  const handleLogin = () => {
+    navigate('/login', { state: { from: location } });
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserEmail('');
+    localStorage.removeItem('userEmail');
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('userLoggedOut'));
+  };
 
   return (
     <>
+      {/* Fixed Login Button - Top Right Corner */}
+      <div className="fixed top-6 right-6 z-[10000]">
+        {isLoggedIn ? (
+          <div className="flex items-center gap-3">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2 flex items-center gap-2">
+              <User className="w-4 h-4 text-purple-400" />
+              <span className="text-xs text-white font-medium">{userEmail.split('@')[0]}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500/20 hover:bg-red-500/30 backdrop-blur-xl border border-red-500/30 rounded-full px-4 py-2 text-xs text-red-300 font-medium transition-all"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleLogin}
+            className="bg-purple-600/20 hover:bg-purple-600/30 backdrop-blur-xl border border-purple-500/30 rounded-full px-6 py-3 flex items-center gap-2 text-white font-medium transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]"
+          >
+            <User className="w-4 h-4" />
+            <span className="text-sm">Login</span>
+          </button>
+        )}
+      </div>
+
+      {/* Login Modal */}
+      {/* Removed - Login is now a separate page */}
       {/* Navbar */}
       <header 
-        className={`fixed left-1/2 -translate-x-1/2 z-[9999] transition-all duration-700 ease-in-out ${
-          scrolled ? "top-4 w-[95%] max-w-7xl" : "top-0 w-full"
+        className={`${isInterviewPage ? 'sticky top-0' : 'fixed left-1/2 -translate-x-1/2'} z-[9999] transition-all duration-700 ease-in-out ${
+          isInterviewPage 
+            ? "w-full" 
+            : scrolled 
+              ? "top-4 w-[95%] max-w-7xl" 
+              : "top-0 w-full"
         }`}
       >
         <nav className={`flex items-center justify-between px-10 py-5 transition-all duration-500 ${
-          scrolled 
-          ? "bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[32px] shadow-2xl" 
-          : "bg-transparent border-b border-white/5"
+          isInterviewPage
+            ? "bg-slate-950/95 backdrop-blur-3xl border-b border-white/10"
+            : scrolled 
+              ? "bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[32px] shadow-2xl" 
+              : "bg-transparent border-b border-white/5"
         }`}>
 
           
@@ -140,8 +218,8 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Spacer to prevent content from going under fixed navbar */}
-      <div className="h-20"></div>
+      {/* Spacer to prevent content from going under fixed navbar - only for non-interview pages */}
+      {!isInterviewPage && <div className="h-20"></div>}
     </>
   );
 };

@@ -16,24 +16,91 @@ const Report = () => {
   const [searchParams] = useSearchParams();
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
   
   const sessionId = searchParams.get('sessionId');
   
+  // Handler functions
+  const handleRetry = () => {
+    if (retryCount < maxRetries) {
+      setRetryCount(prev => prev + 1);
+    }
+  };
+
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
+  const handleViewAllReports = () => {
+    navigate('/reports');
+  };
+
+  const handlePracticeAgain = () => {
+    navigate('/setup');
+  };
+
+  const handleStartPractice = () => {
+    navigate('/setup');
+  };
+  
   useEffect(() => {
     const loadReport = async () => {
-      if (sessionId) {
-        try {
-          const data = await getReportSimple(sessionId);
-          setReportData(data);
-        } catch (error) {
-          console.error('Failed to load report:', error);
-        }
+      if (!sessionId) {
+        setError('No session ID provided in URL');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Try to get report from API first
+        const data = await getReportSimple(sessionId);
+        setReportData(data);
+        setLoading(false);
+      } catch (error: any) {
+        console.error('Failed to load report from API:', error);
+        
+        // Fallback to localStorage
+        try {
+          const history = localStorage.getItem('interviewHistory');
+          if (history) {
+            const historyArray = JSON.parse(history);
+            const sessionData = historyArray.find((h: any) => h.session_id === sessionId);
+            
+            if (sessionData) {
+              // Create a mock report structure from localStorage data
+              const mockReportData = {
+                session_id: sessionId,
+                interview_type: sessionData.interview_type || 'mixed',
+                evaluations: sessionData.evaluations || [],
+                questions: sessionData.questions || [],
+                answers: sessionData.answers || [],
+                created_at: sessionData.created_at || sessionData.date || new Date().toISOString()
+              };
+              
+              setReportData(mockReportData);
+              setError('Report loaded from local storage (API unavailable)');
+            } else {
+              setError(`Report not found for session ID: ${sessionId}`);
+            }
+          } else {
+            setError('No report data available');
+          }
+        } catch (localStorageError) {
+          console.error('Failed to load from localStorage:', localStorageError);
+          setError('Failed to load report data');
+        }
+        
+        setLoading(false);
+      }
     };
     
     loadReport();
-  }, [sessionId]);
+  }, [sessionId, retryCount]);
 
   // Helper function to compute data from reportData
   const computeReportData = () => {
@@ -323,19 +390,83 @@ const Report = () => {
     recommendations
   } = computeReportData();
 
-  // Show error if no report data
-  if (!reportData && !loading) {
+  // Show error state with better UX
+  if (error && !reportData && !loading) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 text-white">
-          <div className="text-center">
-            <p className="text-xl mb-4">No report data available</p>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-sky-500 rounded-lg hover:bg-sky-600 transition-colors"
-            >
-              Back to Dashboard
-            </button>
+        <div className="min-h-screen bg-[#020617] text-white">
+          {/* Animated Background */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
+
+          <div className="relative flex items-center justify-center min-h-screen px-6">
+            <div className="max-w-md w-full">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-orange-500/20 rounded-2xl blur-2xl opacity-50"></div>
+                <div className="relative bg-slate-800/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+                  <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />
+                  
+                  <h2 className="text-2xl font-bold text-white mb-3">Report Not Found</h2>
+                  
+                  <p className="text-gray-400 mb-6 leading-relaxed">
+                    {error.includes('session ID') 
+                      ? `We couldn't find a report for session ID: ${sessionId}`
+                      : error.includes('local storage')
+                      ? 'Report loaded from local storage, but some features may be limited.'
+                      : 'There was an issue loading your report. This might be due to a network problem or the report may no longer be available.'
+                    }
+                  </p>
+
+                  {error.includes('local storage') ? (
+                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                      <div className="flex items-center justify-center space-x-2 text-yellow-300 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Limited functionality - API unavailable</span>
+                      </div>
+                    </div>
+                  ) : retryCount < maxRetries ? (
+                    <button
+                      onClick={handleRetry}
+                      className="mb-4 w-full px-6 py-3 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                    >
+                      Try Again ({maxRetries - retryCount} attempts left)
+                    </button>
+                  ) : (
+                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                      <div className="flex items-center justify-center space-x-2 text-red-300 text-sm">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Maximum retry attempts reached</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleViewAllReports}
+                      className="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300"
+                    >
+                      View All Reports
+                    </button>
+                    <button
+                      onClick={handleBackToDashboard}
+                      className="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300"
+                    >
+                      Back to Dashboard
+                    </button>
+                  </div>
+
+                  {sessionId && (
+                    <div className="mt-6 pt-4 border-t border-white/10">
+                      <p className="text-xs text-gray-500">
+                        Session ID: {sessionId}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Layout>
@@ -352,18 +483,6 @@ const Report = () => {
     if (priority === 'high') return 'from-red-400 to-orange-500';
     if (priority === 'medium') return 'from-yellow-400 to-orange-400';
     return 'from-blue-400 to-cyan-500';
-  };
-
-  const handlePracticeAgain = () => {
-    navigate('/setup');
-  };
-
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
-  };
-
-  const handleStartPractice = () => {
-    navigate('/setup');
   };
 
   if (loading) {
@@ -440,6 +559,20 @@ const Report = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 py-8">
+        {/* Warning banner for localStorage fallback */}
+        {error && error.includes('local storage') && reportData && (
+          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+              <div>
+                <p className="text-yellow-300 font-semibold text-sm">Limited Functionality</p>
+                <p className="text-yellow-200/80 text-xs">
+                  This report was loaded from local storage. Some features may be unavailable due to API connectivity issues.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Score Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Overall Score */}

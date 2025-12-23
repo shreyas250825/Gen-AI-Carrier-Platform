@@ -75,16 +75,20 @@ cd genai-career-platform
 ```bash
 cd backend
 
-# Create virtual environment
+# Create virtual environment (optional but recommended)
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your configuration
+# Quick fix for missing dependencies (if needed)
+# Windows: install_deps.bat
+# PowerShell: .\install_deps.ps1
+# Python: python quick_fix.py
+
+# Environment is pre-configured for demo mode
+# No additional configuration needed!
 ```
 
 ### 3. Frontend Setup
@@ -481,6 +485,49 @@ npm test
 
 # Integration tests
 npm run test:e2e
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Issue: `ModuleNotFoundError: No module named 'boto3'`
+**Solution**: Install missing dependencies
+```bash
+cd backend
+pip install boto3 pymongo python-dotenv
+
+# Or use quick fix scripts:
+# Windows: install_deps.bat
+# PowerShell: .\install_deps.ps1
+# Python: python quick_fix.py
+```
+
+#### Issue: MongoDB connection failed
+**Solution**: This is expected in demo mode. The system automatically uses local JSON storage.
+
+#### Issue: Ollama not available  
+**Solution**: The system automatically falls back to Gemini AI or demo responses.
+
+#### Issue: Frontend can't connect to backend
+**Solution**: 
+1. Ensure backend is running on port 8000
+2. Check CORS settings in backend/.env
+3. Verify frontend is on port 3000
+
+#### Issue: Demo mode not working
+**Solution**: Ensure `DEMO_MODE=true` is set in backend/.env
+
+### Quick Diagnostic
+```bash
+# Check if dependencies are installed
+pip list | grep -E "(boto3|pymongo|fastapi)"
+
+# Test backend health
+curl http://localhost:8000/api/v1/demo/status
+
+# Check demo mode status
+curl http://localhost:8000/api/v1/demo/architecture-overview
 ```
 
 ## 📚 Documentation

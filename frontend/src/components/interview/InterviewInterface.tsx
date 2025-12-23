@@ -1,7 +1,7 @@
 // src/components/interview/InterviewInterface.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, VideoOff, Mic, Square, Send } from 'lucide-react';
+import { Video, VideoOff, Mic, Square, Send, StopCircle } from 'lucide-react';
 import { useWebcam } from '../../hooks/useWebcam';
 import { useSpeechRecognition } from '../../hooks/useSpeech';
 import { useFaceTracking } from '../../hooks/useFaceTracking';
@@ -19,6 +19,7 @@ const InterviewInterface: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [interviewStage, setInterviewStage] = useState<'not-started' | 'question' | 'answering' | 'analysis'>('not-started');
   const [isLoading, setIsLoading] = useState(false);
+  const [showEndTestConfirm, setShowEndTestConfirm] = useState(false);
 
   // Media state
   const [isMediaEnabled, setIsMediaEnabled] = useState(false);
@@ -349,6 +350,67 @@ const InterviewInterface: React.FC = () => {
     }
   };
 
+  // End test early - finish interview with current answers
+  const endTestEarly = async () => {
+    if (!sessionId) return;
+
+    setShowEndTestConfirm(false);
+    setIsRecording(false);
+    speech.stop();
+    setInterviewStage('analysis');
+    setIsLoading(true);
+
+    try {
+      // If user is currently answering, submit the current answer first
+      if (interviewStage === 'answering' && transcript.trim()) {
+        await submitAnswerSimple({
+          session_id: sessionId,
+          question_id: currentQuestionId,
+          transcript,
+          metrics: lastMetricsRef.current || { eyeContact: null },
+        });
+      }
+
+      // Get the report with current answers
+      try {
+        const reportData = await getReportSimple(sessionId);
+        const history = localStorage.getItem('interviewHistory');
+        const historyArray = history ? JSON.parse(history) : [];
+        const sessionIndex = historyArray.findIndex((h: any) => h.session_id === sessionId);
+
+        if (sessionIndex >= 0 && reportData.evaluations && reportData.evaluations.length > 0) {
+          const evals = reportData.evaluations;
+          const tech = evals.reduce((sum: number, e: any) => sum + (e.technical || 0), 0) / evals.length;
+          const comm = evals.reduce((sum: number, e: any) => sum + (e.communication || 0), 0) / evals.length;
+          const conf = evals.reduce((sum: number, e: any) => sum + (e.confidence || 0), 0) / evals.length;
+          const overall = (tech + comm + conf) / 3;
+
+          historyArray[sessionIndex] = {
+            ...historyArray[sessionIndex],
+            overall_score: overall,
+            technical_score: tech,
+            communication_score: comm,
+            confidence_score: conf,
+            questions_count: evals.length,
+            completed_at: new Date().toISOString(),
+            ended_early: true, // Mark as ended early
+          };
+          localStorage.setItem('interviewHistory', JSON.stringify(historyArray));
+        }
+      } catch (err) {
+        console.error('Failed to fetch report:', err);
+      }
+
+      // Navigate to report
+      navigate(`/report?sessionId=${sessionId}`);
+    } catch (err) {
+      console.error('Failed to end test early:', err);
+      setInterviewStage('question');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading && interviewStage === 'not-started') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900">
@@ -359,7 +421,55 @@ const InterviewInterface: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white">
+      {/* End Test Confirmation Dialog */}
+      {showEndTestConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 max-w-md rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl p-6">
+            <div className="mb-4 text-center">
+              <StopCircle className="mx-auto mb-3 h-12 w-12 text-orange-400" />
+              <h3 className="text-lg font-semibold text-white">End Interview Early?</h3>
+              <p className="mt-2 text-sm text-gray-400">
+                You've answered {currentQuestionIndex + (interviewStage === 'answering' && transcript.trim() ? 1 : 0)} question(s) so far. 
+                Your evaluation will be based on the questions you've completed.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndTestConfirm(false)}
+                className="flex-1 rounded-xl border border-white/10 bg-slate-800/50 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-slate-800/70 transition"
+              >
+                Continue Interview
+              </button>
+              <button
+                onClick={endTestEarly}
+                className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-orange-600 hover:to-red-600 transition"
+              >
+                End & Get Results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:py-8">
+        {/* Header with End Test Button */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Interview Session</h1>
+            <p className="text-sm text-gray-400">
+              Question {currentQuestionIndex + 1} • {interviewStage === 'question' ? 'Listening' : interviewStage === 'answering' ? 'Recording' : 'Processing'}
+            </p>
+          </div>
+          {(interviewStage === 'question' || interviewStage === 'answering') && currentQuestionIndex > 0 && (
+            <button
+              onClick={() => setShowEndTestConfirm(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-orange-400/40 bg-orange-500/15 px-4 py-2 text-sm font-medium text-orange-200 hover:bg-orange-500/25 transition"
+            >
+              <StopCircle className="h-4 w-4" />
+              <span>End Test</span>
+            </button>
+          )}
+        </div>
 
         {/* Main 2-column layout – equal ratio, full height */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 items-stretch">
@@ -505,18 +615,29 @@ const InterviewInterface: React.FC = () => {
                 Listen to the question first, then enable your camera and microphone and click{' '}
                 <span className="font-semibold text-sky-300">Start Answering</span> when you are ready.
               </p>
-              <button
-                onClick={startAnswering}
-                disabled={!isMediaEnabled && !webcamActive}
-                className={`mt-1 inline-flex items-center justify-center gap-2 rounded-2xl px-7 py-3 text-sm font-semibold transition-all duration-300 ${
-                  isMediaEnabled || webcamActive
-                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg shadow-emerald-500/30'
-                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                <Mic className="h-4 w-4" />
-                <span>Start Answering</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {currentQuestionIndex > 0 && (
+                  <button
+                    onClick={() => setShowEndTestConfirm(true)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-orange-400/40 bg-orange-500/15 px-4 py-2.5 text-sm font-medium text-orange-200 hover:bg-orange-500/25 transition"
+                  >
+                    <StopCircle className="h-4 w-4" />
+                    <span>End Test</span>
+                  </button>
+                )}
+                <button
+                  onClick={startAnswering}
+                  disabled={!isMediaEnabled && !webcamActive}
+                  className={`inline-flex items-center justify-center gap-2 rounded-2xl px-7 py-3 text-sm font-semibold transition-all duration-300 ${
+                    isMediaEnabled || webcamActive
+                      ? 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg shadow-emerald-500/30'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Mic className="h-4 w-4" />
+                  <span>Start Answering</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -527,6 +648,13 @@ const InterviewInterface: React.FC = () => {
                 <span>Recording your answer… speak naturally.</span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setShowEndTestConfirm(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>End Test</span>
+                </button>
                 <button
                   onClick={() => {
                     setIsRecording(false);

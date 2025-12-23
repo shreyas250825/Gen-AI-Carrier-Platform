@@ -8,9 +8,22 @@ import json
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 import logging
+
+# Optional imports for MongoDB - fallback to demo mode if not available
+try:
+    from pymongo import MongoClient
+    from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+    MONGODB_AVAILABLE = True
+except ImportError:
+    MONGODB_AVAILABLE = False
+    # Create dummy classes for type hints
+    class MongoClient:
+        pass
+    class ConnectionFailure(Exception):
+        pass
+    class ServerSelectionTimeoutError(Exception):
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +61,7 @@ class MongoDBService:
     def _initialize_mongodb(self):
         """Initialize MongoDB connection with fallback to demo mode"""
         try:
-            if not self.demo_mode:
+            if not self.demo_mode and MONGODB_AVAILABLE:
                 self.client = MongoClient(
                     self.mongodb_uri,
                     serverSelectionTimeoutMS=5000,
@@ -59,9 +72,18 @@ class MongoDBService:
                 self.db = self.client[self.database_name]
                 logger.info(f"✅ Connected to MongoDB: {self.database_name}")
             else:
-                logger.info("🎭 Running in DEMO MODE - using local JSON storage")
+                if not MONGODB_AVAILABLE:
+                    logger.info("🎭 MongoDB driver not available - running in DEMO MODE")
+                else:
+                    logger.info("🎭 Running in DEMO MODE - using local JSON storage")
+                self.demo_mode = True
         except (ConnectionFailure, ServerSelectionTimeoutError) as e:
             logger.warning(f"⚠️ MongoDB connection failed, switching to demo mode: {e}")
+            self.demo_mode = True
+            self.client = None
+            self.db = None
+        except Exception as e:
+            logger.warning(f"⚠️ MongoDB initialization failed, switching to demo mode: {e}")
             self.demo_mode = True
             self.client = None
             self.db = None
@@ -135,7 +157,7 @@ class MongoDBService:
                         "confidenceScore": 94,
                         "matchedSkills": ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker"],
                         "missingSkills": ["Kubernetes", "System Design", "Microservices"],
-                        "experienceYears": 4.5,
+                        "experienceYears": 2.0,
                         "createdAt": datetime.now().isoformat(),
                         "demo_mode": True
                     }
@@ -146,7 +168,7 @@ class MongoDBService:
                         "name": "Alex Johnson",
                         "email": "alex.johnson@demo.com",
                         "currentRole": "Software Engineer",
-                        "experienceYears": 4.5,
+                        "experienceYears": 2.0,
                         "skills": ["Python", "JavaScript", "React", "Node.js", "AWS"],
                         "statistics": {
                             "totalInterviews": 5,

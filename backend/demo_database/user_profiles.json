@@ -1,0 +1,24 @@
+[
+  {
+    "_id": "demo_user_001",
+    "name": "Alex Johnson",
+    "email": "alex.johnson@demo.com",
+    "currentRole": "Software Engineer",
+    "experienceYears": 2.0,
+    "skills": [
+      "Python",
+      "JavaScript",
+      "React",
+      "Node.js",
+      "AWS"
+    ],
+    "statistics": {
+      "totalInterviews": 5,
+      "averageScore": 86,
+      "bestScore": 92,
+      "improvementRate": 18
+    },
+    "createdAt": "2025-12-23T12:59:51.245794",
+    "demo_mode": true
+  }
+]

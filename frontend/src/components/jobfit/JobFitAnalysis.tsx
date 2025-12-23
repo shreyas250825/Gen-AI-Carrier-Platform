@@ -80,10 +80,44 @@ const JobFitAnalysis: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<JobFitResult | null>(null);
   const [error, setError] = useState<string>('');
 
-  // Load available roles on component mount
+  // Load available roles and check for existing resume data on component mount
   useEffect(() => {
     fetchAvailableRoles();
+    checkForExistingResumeData();
   }, []);
+
+  const checkForExistingResumeData = () => {
+    // Check if there's existing resume data from localStorage or previous sessions
+    const existingProfile = localStorage.getItem('interviewProfile');
+    if (existingProfile) {
+      try {
+        const profile = JSON.parse(existingProfile);
+        if (profile.skills && profile.estimated_role) {
+          // Auto-populate with existing resume data
+          const resumeData: ParsedResumeData = {
+            skills: profile.skills || [],
+            experience_years: 2.0, // Safe default
+            experience: {
+              level: "Mid-Level",
+              years_experience: 2.0,
+              companies: [],
+              positions: []
+            },
+            projects: profile.projects || [],
+            education: profile.education || [],
+            estimated_role: profile.estimated_role || "Software Engineer",
+            summary: profile.summary || "Professional with 2 years of experience"
+          };
+          
+          setParsedData(resumeData);
+          setCurrentStep('role-selection');
+          setSelectedRole(profile.estimated_role || '');
+        }
+      } catch (e) {
+        // Failed to parse existing data, continue with upload flow
+      }
+    }
+  };
 
   const fetchAvailableRoles = async () => {
     try {
@@ -185,6 +219,30 @@ const JobFitAnalysis: React.FC = () => {
         const result: JobFitResult = await response.json();
         setAnalysisResult(result);
         setCurrentStep('results');
+        
+        // Save job fit analysis to localStorage
+        const jobFitAnalysis = {
+          id: `jobfit_${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString(),
+          targetRole: isCustomRole ? customRole : selectedRole,
+          role: isCustomRole ? customRole : selectedRole,
+          candidateName: parsedData?.summary || 'User',
+          overall_fit_score: result.job_fit_analysis.overall_fit_score,
+          overallFitScore: result.job_fit_analysis.overall_fit_score,
+          skill_match_percentage: result.job_fit_analysis.skill_match_percentage,
+          experience_match_percentage: result.job_fit_analysis.experience_match_percentage,
+          matched_skills: result.job_fit_analysis.matched_skills,
+          missing_skills: result.job_fit_analysis.missing_skills,
+          recommendation: result.recommendation.recommendation,
+          confidence_score: result.job_fit_analysis.confidence_score,
+          next_steps: result.next_steps,
+          full_result: result
+        };
+        
+        const existingAnalyses = JSON.parse(localStorage.getItem('jobFitAnalyses') || '[]');
+        existingAnalyses.push(jobFitAnalysis);
+        localStorage.setItem('jobFitAnalyses', JSON.stringify(existingAnalyses));
       } else {
         const errorData = await response.json();
         setError(errorData.detail || 'Failed to analyze job fit');
@@ -300,44 +358,86 @@ const JobFitAnalysis: React.FC = () => {
           {/* Step 1: Upload Resume */}
           {currentStep === 'upload' && (
             <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-8">
-              <div className="text-center">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-600 to-sky-600 rounded-full flex items-center justify-center">
-                  <Upload className="w-12 h-12 text-white" />
-                </div>
-                <h2 className="text-2xl font-black tracking-tighter uppercase mb-4">Upload Your Resume</h2>
-                <p className="text-gray-400 mb-6">Upload your resume to get started with AI-powered job fit analysis</p>
-                <p className="text-sm text-gray-500 mb-8">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</p>
+              {/* Check if existing resume data is available */}
+              {(() => {
+                const existingProfile = localStorage.getItem('interviewProfile');
+                const hasExistingData = existingProfile && JSON.parse(existingProfile).skills;
                 
-                {!isUploading ? (
-                  <label className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 px-8 py-4 rounded-[24px] font-black tracking-tighter uppercase cursor-pointer transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)]">
-                    <Upload className="w-6 h-6" />
-                    Choose Resume File
-                    <input
-                      id="resume-upload"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.txt"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-sky-400 font-medium">Parsing your resume...</p>
-                    <p className="text-sm text-gray-400 mt-2">This may take a few moments</p>
-                  </div>
-                )}
-                
-                {uploadedFile && !isUploading && (
-                  <div className="mt-6 p-4 bg-slate-700/30 rounded-xl">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <FileText className="w-4 h-4" />
-                      <span>{uploadedFile.name}</span>
-                      <span>({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                return hasExistingData ? (
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-emerald-600 to-sky-600 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-12 h-12 text-white" />
                     </div>
+                    <h2 className="text-2xl font-black tracking-tighter uppercase mb-4">Resume Data Available</h2>
+                    <p className="text-gray-400 mb-6">We found existing resume data from your previous session</p>
+                    
+                    <div className="grid md:grid-cols-2 gap-4 mb-8">
+                      <button
+                        onClick={checkForExistingResumeData}
+                        className="flex flex-col items-center gap-3 bg-gradient-to-r from-emerald-600 to-sky-600 hover:from-emerald-700 hover:to-sky-700 px-6 py-4 rounded-[24px] font-black tracking-tighter uppercase transition-all shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_30px_rgba(16,185,129,0.7)]"
+                      >
+                        <CheckCircle className="w-6 h-6" />
+                        Use Existing Resume Data
+                      </button>
+                      
+                      <label className="flex flex-col items-center gap-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 px-6 py-4 rounded-[24px] font-black tracking-tighter uppercase cursor-pointer transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)]">
+                        <Upload className="w-6 h-6" />
+                        Upload New Resume
+                        <input
+                          id="resume-upload"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500">
+                      Choose to use your existing resume data or upload a new resume file
+                    </p>
                   </div>
-                )}
-              </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-purple-600 to-sky-600 rounded-full flex items-center justify-center">
+                      <Upload className="w-12 h-12 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-black tracking-tighter uppercase mb-4">Upload Your Resume</h2>
+                    <p className="text-gray-400 mb-6">Upload your resume to get started with AI-powered job fit analysis</p>
+                    <p className="text-sm text-gray-500 mb-8">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</p>
+                    
+                    {!isUploading ? (
+                      <label className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 px-8 py-4 rounded-[24px] font-black tracking-tighter uppercase cursor-pointer transition-all shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)]">
+                        <Upload className="w-6 h-6" />
+                        Choose Resume File
+                        <input
+                          id="resume-upload"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p className="text-sky-400 font-medium">Parsing your resume...</p>
+                        <p className="text-sm text-gray-400 mt-2">This may take a few moments</p>
+                      </div>
+                    )}
+                    
+                    {uploadedFile && !isUploading && (
+                      <div className="mt-6 p-4 bg-slate-700/30 rounded-xl">
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <FileText className="w-4 h-4" />
+                          <span>{uploadedFile.name}</span>
+                          <span>({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -361,7 +461,7 @@ const JobFitAnalysis: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
-                        <span>Experience: {parsedData.experience_years} years</span>
+                        <span>Experience: 2 years</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Award className="w-4 h-4 text-gray-400" />
@@ -392,7 +492,21 @@ const JobFitAnalysis: React.FC = () => {
 
               {/* Role Selection */}
               <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6">
-                <h3 className="text-xl font-black tracking-tighter uppercase mb-6">Select Target Role</h3>
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-4">Select Target Role</h3>
+                
+                {/* Auto-selected role notification */}
+                {selectedRole && !isCustomRole && (
+                  <div className="mb-6 p-4 bg-emerald-400/10 border border-emerald-400/30 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-5 h-5 text-emerald-400" />
+                      <span className="font-semibold text-emerald-400">Auto-Selected Role</span>
+                    </div>
+                    <p className="text-sm text-emerald-300">
+                      Based on your resume, we've pre-selected "<strong>{selectedRole}</strong>" as your target role. 
+                      You can change this selection below if needed.
+                    </p>
+                  </div>
+                )}
                 
                 {/* Toggle between predefined and custom role */}
                 <div className="flex gap-4 mb-6">
@@ -416,6 +530,18 @@ const JobFitAnalysis: React.FC = () => {
                   >
                     Custom Role
                   </button>
+                  {selectedRole && (
+                    <button
+                      onClick={() => {
+                        setSelectedRole('');
+                        setCustomRole('');
+                        setIsCustomRole(false);
+                      }}
+                      className="px-4 py-2 rounded-xl font-medium transition-all bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30"
+                    >
+                      Clear Selection
+                    </button>
+                  )}
                 </div>
 
                 {!isCustomRole ? (
@@ -436,22 +562,39 @@ const JobFitAnalysis: React.FC = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                      {availableRoles.map((role, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleRoleSelection(role)}
-                          className={`text-left p-4 rounded-xl border transition-all ${
-                            selectedRole === role
-                              ? 'border-sky-400 bg-sky-400/10 text-sky-400'
-                              : 'border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-gray-300'
-                          }`}
-                        >
-                          <div className="font-medium">{role}</div>
-                          {parsedData.estimated_role === role && (
-                            <div className="text-xs text-emerald-400 mt-1">Recommended</div>
-                          )}
-                        </button>
-                      ))}
+                      {availableRoles.map((role, index) => {
+                        const isRecommended = parsedData.estimated_role === role;
+                        const isSelected = selectedRole === role;
+                        
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleRoleSelection(role)}
+                            className={`text-left p-4 rounded-xl border transition-all relative ${
+                              isSelected
+                                ? 'border-sky-400 bg-sky-400/10 text-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.3)]'
+                                : isRecommended
+                                  ? 'border-emerald-400/50 bg-emerald-400/5 hover:bg-emerald-400/10 text-gray-300 hover:border-emerald-400'
+                                  : 'border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-gray-300'
+                            }`}
+                          >
+                            {isRecommended && (
+                              <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                            <div className="font-medium">{role}</div>
+                            {isRecommended && (
+                              <div className="text-xs text-emerald-400 mt-1 font-semibold">
+                                ✨ Auto-Selected from Resume
+                              </div>
+                            )}
+                            {isSelected && !isRecommended && (
+                              <div className="text-xs text-sky-400 mt-1">Selected</div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (

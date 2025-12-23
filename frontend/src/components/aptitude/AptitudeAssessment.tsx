@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle, XCircle, ArrowRight, RotateCcw, Target } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, ArrowRight, RotateCcw, Target, PlayCircle, Brain, Timer, Award, StopCircle } from 'lucide-react';
 import Layout from '../layout/Layout';
 
 interface AptitudeQuestion {
@@ -20,17 +20,20 @@ interface AptitudeResult {
   explanation: string;
 }
 
+type AssessmentState = 'start' | 'assessment' | 'completed';
+
 const AptitudeAssessment: React.FC = () => {
   const navigate = useNavigate();
+  const [assessmentState, setAssessmentState] = useState<AssessmentState>('start');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<AptitudeQuestion[]>([]);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
-  const [timeRemaining, setTimeRemaining] = useState(900); // 15 minutes for 15 questions
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes for 5 questions
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AptitudeResult[]>([]);
   const [overallScore, setOverallScore] = useState(0);
+  const [showEndTestConfirm, setShowEndTestConfirm] = useState(false);
 
   // Comprehensive question bank with 110 real interview questions
   const allQuestions: AptitudeQuestion[] = [
@@ -953,7 +956,7 @@ const AptitudeAssessment: React.FC = () => {
 
   // Function to select questions based on difficulty distribution
   const selectQuestionsByDifficulty = (questions: AptitudeQuestion[]) => {
-    // Distribute questions: 5 easy, 6 medium, 4 hard
+    // Distribute questions: 2 easy, 2 medium, 1 hard (total 5 questions)
     const easyQuestions = questions.filter(q => q.difficulty === 'easy');
     const mediumQuestions = questions.filter(q => q.difficulty === 'medium');
     const hardQuestions = questions.filter(q => q.difficulty === 'hard');
@@ -965,51 +968,58 @@ const AptitudeAssessment: React.FC = () => {
 
     // Select questions from each difficulty level
     const selectedQuestions = [
-      ...shuffledEasy.slice(0, 5),    // 5 easy questions
-      ...shuffledMedium.slice(0, 6),  // 6 medium questions
-      ...shuffledHard.slice(0, 4)     // 4 hard questions
+      ...shuffledEasy.slice(0, 2),    // 2 easy questions
+      ...shuffledMedium.slice(0, 2),  // 2 medium questions
+      ...shuffledHard.slice(0, 1)     // 1 hard question
     ];
 
     // Final shuffle to randomize the order
     return selectedQuestions.sort(() => 0.5 - Math.random());
   };
 
-  // Initialize assessment
+  // Initialize assessment - don't auto-load questions
   useEffect(() => {
-    const loadQuestions = async () => {
-      setIsLoading(true);
-      try {
-        // For now, use comprehensive question bank
-        setTimeout(() => {
-          // Select 15 questions with balanced difficulty distribution
-          const selectedQuestions = selectQuestionsByDifficulty(allQuestions);
-          setQuestions(selectedQuestions);
-          setUserAnswers(new Array(selectedQuestions.length).fill(''));
-          setIsLoading(false);
-        }, 1500);
-      } catch (error) {
-        // Failed to load questions, use fallback
-        const fallbackQuestions = allQuestions.slice(0, 15);
-        setQuestions(fallbackQuestions);
-        setUserAnswers(new Array(fallbackQuestions.length).fill(''));
-        setIsLoading(false);
-      }
-    };
-
-    loadQuestions();
+    // Check if we should start directly (from URL params or state)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('autostart') === 'true') {
+      handleStartAssessment();
+    }
   }, []);
+
+  const handleStartAssessment = async () => {
+    setIsLoading(true);
+    setAssessmentState('assessment');
+    
+    try {
+      // For now, use comprehensive question bank
+      setTimeout(() => {
+        // Select 5 questions with balanced difficulty distribution
+        const selectedQuestions = selectQuestionsByDifficulty(allQuestions);
+        setQuestions(selectedQuestions);
+        setUserAnswers(new Array(selectedQuestions.length).fill(''));
+        setTimeRemaining(300); // Reset timer to 5 minutes
+        setIsLoading(false);
+      }, 800); // Reduced loading time for faster experience
+    } catch (error) {
+      // Failed to load questions, use fallback
+      const fallbackQuestions = allQuestions.slice(0, 5);
+      setQuestions(fallbackQuestions);
+      setUserAnswers(new Array(fallbackQuestions.length).fill(''));
+      setIsLoading(false);
+    }
+  };
 
   // Timer countdown
   useEffect(() => {
-    if (timeRemaining > 0 && !isCompleted && !isLoading) {
+    if (timeRemaining > 0 && assessmentState === 'assessment' && !isLoading) {
       const timer = setTimeout(() => {
         setTimeRemaining(timeRemaining - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (timeRemaining === 0 && !isCompleted) {
+    } else if (timeRemaining === 0 && assessmentState === 'assessment') {
       handleSubmitAssessment();
     }
-  }, [timeRemaining, isCompleted, isLoading]);
+  }, [timeRemaining, assessmentState, isLoading]);
 
   const handleAnswerSelect = (answer: string) => {
     setSelectedAnswer(answer);
@@ -1070,11 +1080,98 @@ const AptitudeAssessment: React.FC = () => {
         const correctAnswers = generatedResults.filter(r => r.correct).length;
         const score = Math.round((correctAnswers / generatedResults.length) * 100);
         setOverallScore(score);
-        setIsCompleted(true);
+        
+        // Save results to localStorage
+        const aptitudeResult = {
+          id: `aptitude_${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          completedAt: new Date().toISOString(),
+          overall_score: score,
+          correct_answers: correctAnswers,
+          total_questions: generatedResults.length,
+          duration: formatTime(300 - timeRemaining), // Updated for 5 minutes
+          test_type: "Quick Assessment",
+          results: generatedResults
+        };
+        
+        const existingResults = JSON.parse(localStorage.getItem('aptitudeResults') || '[]');
+        existingResults.push(aptitudeResult);
+        localStorage.setItem('aptitudeResults', JSON.stringify(existingResults));
+        
+        setAssessmentState('completed');
         setIsLoading(false);
-      }, 2500);
+      }, 1500); // Reduced processing time for faster experience
     } catch (error) {
       // Failed to submit assessment
+      setIsLoading(false);
+    }
+  };
+
+  // End test early - finish assessment with current answers
+  const endTestEarly = async () => {
+    setShowEndTestConfirm(false);
+    setIsLoading(true);
+
+    try {
+      // Generate results for answered questions only
+      const answeredQuestions = questions.slice(0, currentQuestionIndex + (selectedAnswer ? 1 : 0));
+      const answeredUserAnswers = userAnswers.slice(0, answeredQuestions.length);
+      
+      setTimeout(() => {
+        const generatedResults = answeredQuestions.map((question, index) => {
+          const userAnswer = answeredUserAnswers[index] || '';
+          const correctAnswer = aptitudeAnswers[question.id];
+          
+          if (correctAnswer) {
+            const isCorrect = userAnswer === correctAnswer;
+            return {
+              question_id: question.id,
+              correct: isCorrect,
+              score: isCorrect ? 100 : 0,
+              user_answer: userAnswer,
+              correct_answer: correctAnswer,
+              explanation: getExplanation(question.id, question.type, question.difficulty)
+            };
+          }
+          
+          return {
+            question_id: question.id,
+            correct: Math.random() > 0.4,
+            score: Math.random() > 0.4 ? 100 : 0,
+            user_answer: userAnswer,
+            correct_answer: question.options[0],
+            explanation: `This ${question.type} question (${question.difficulty}) tests analytical thinking and problem-solving skills.`
+          };
+        });
+        
+        setResults(generatedResults);
+        const correctAnswers = generatedResults.filter(r => r.correct).length;
+        const score = Math.round((correctAnswers / generatedResults.length) * 100);
+        setOverallScore(score);
+        
+        // Save results to localStorage
+        const aptitudeResult = {
+          id: `aptitude_${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          completedAt: new Date().toISOString(),
+          overall_score: score,
+          correct_answers: correctAnswers,
+          total_questions: generatedResults.length,
+          duration: formatTime(300 - timeRemaining),
+          test_type: "Quick Assessment (Early End)",
+          results: generatedResults,
+          ended_early: true
+        };
+        
+        const existingResults = JSON.parse(localStorage.getItem('aptitudeResults') || '[]');
+        existingResults.push(aptitudeResult);
+        localStorage.setItem('aptitudeResults', JSON.stringify(existingResults));
+        
+        setAssessmentState('completed');
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to end test early:', error);
       setIsLoading(false);
     }
   };
@@ -1101,21 +1198,146 @@ const AptitudeAssessment: React.FC = () => {
     return 'text-red-400';
   };
 
-  if (isLoading && !isCompleted) {
+  if (isLoading && assessmentState === 'assessment') {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sky-950 to-slate-900 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-lg">Loading Comprehensive Assessment...</p>
-            <p className="text-gray-400 text-sm mt-2">Selecting 15 questions from 110+ question bank</p>
+            <p className="text-white text-lg">Loading Quick Assessment...</p>
+            <p className="text-gray-400 text-sm mt-2">Selecting 5 questions from 110+ question bank</p>
           </div>
         </div>
       </Layout>
     );
   }
 
-  if (isCompleted) {
+  // Start Screen
+  if (assessmentState === 'start') {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-[#020617] text-white">
+          {/* Animated Background */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
+          
+          <div className="max-w-4xl mx-auto px-6 py-8 relative z-10">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-purple-600 to-sky-600 rounded-full mb-6 transform hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(139,92,246,0.5)]">
+                <Brain className="w-12 h-12 text-white" />
+              </div>
+              <h1 className="text-6xl font-black tracking-tighter uppercase mb-4 bg-gradient-to-r from-purple-600 to-sky-600 bg-clip-text text-transparent">
+                Aptitude Assessment
+              </h1>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                Test your logical reasoning, quantitative aptitude, and analytical thinking skills with our comprehensive assessment
+              </p>
+            </div>
+
+            {/* Assessment Info */}
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 text-center">
+                <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Timer className="w-8 h-8 text-purple-400" />
+                </div>
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-2">5 Minutes</h3>
+                <p className="text-gray-400 text-sm">Time limit for completion</p>
+              </div>
+              
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 text-center">
+                <div className="w-16 h-16 bg-sky-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-8 h-8 text-sky-400" />
+                </div>
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-2">5 Questions</h3>
+                <p className="text-gray-400 text-sm">From 110+ question bank</p>
+              </div>
+              
+              <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 text-center">
+                <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award className="w-8 h-8 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-2">Real Questions</h3>
+                <p className="text-gray-400 text-sm">From actual interviews</p>
+              </div>
+            </div>
+
+            {/* Question Types */}
+            <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 mb-12">
+              <h3 className="text-2xl font-black tracking-tighter uppercase mb-6 text-center">Assessment Areas</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { type: 'Quantitative', icon: '🔢', desc: 'Math, percentages, ratios' },
+                  { type: 'Logical', icon: '🧠', desc: 'Reasoning, deduction' },
+                  { type: 'Analytical', icon: '📊', desc: 'Problem analysis' },
+                  { type: 'Pattern', icon: '🔄', desc: 'Sequences, patterns' }
+                ].map((area, index) => (
+                  <div key={index} className="text-center p-4">
+                    <div className="text-3xl mb-3">{area.icon}</div>
+                    <h4 className="font-bold text-white mb-2">{area.type}</h4>
+                    <p className="text-xs text-gray-400">{area.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 mb-12">
+              <h3 className="text-xl font-black tracking-tighter uppercase mb-4">Instructions</h3>
+              <ul className="space-y-3 text-gray-300">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>You have 5 minutes to complete 5 questions</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>Each question has 4 multiple choice options</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>You can navigate between questions and change answers</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>Questions are selected from easy, medium, and hard difficulty levels</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>Your results will be saved and available in your dashboard</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Start Button */}
+            <div className="text-center">
+              <button
+                onClick={handleStartAssessment}
+                disabled={isLoading}
+                className="inline-flex items-center gap-4 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 px-12 py-6 rounded-[32px] font-black tracking-tighter uppercase text-xl transition-all shadow-[0_0_30px_rgba(139,92,246,0.5)] hover:shadow-[0_0_40px_rgba(139,92,246,0.7)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PlayCircle className="w-8 h-8" />
+                {isLoading ? 'Loading...' : 'Start Quick Assessment'}
+                <ArrowRight className="w-8 h-8" />
+              </button>
+              
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="text-gray-400 hover:text-white transition-colors text-sm"
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (assessmentState === 'completed') {
     const correctAnswers = results.filter(r => r.correct).length;
     const strengthAreas = results.filter(r => r.correct).map(r => {
       const question = questions.find(q => q.id === r.question_id);
@@ -1248,7 +1470,15 @@ const AptitudeAssessment: React.FC = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setAssessmentState('start');
+                  setCurrentQuestionIndex(0);
+                  setQuestions([]);
+                  setUserAnswers([]);
+                  setSelectedAnswer('');
+                  setResults([]);
+                  setOverallScore(0);
+                }}
                 className="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-semibold transition-colors"
               >
                 <RotateCcw className="w-5 h-5" />
@@ -1274,6 +1504,36 @@ const AptitudeAssessment: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-[#020617] text-white">
+        {/* End Test Confirmation Dialog */}
+        {showEndTestConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="mx-4 max-w-md rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl p-6">
+              <div className="mb-4 text-center">
+                <StopCircle className="mx-auto mb-3 h-12 w-12 text-orange-400" />
+                <h3 className="text-lg font-semibold text-white">End Assessment Early?</h3>
+                <p className="mt-2 text-sm text-gray-400">
+                  You've answered {currentQuestionIndex + (selectedAnswer ? 1 : 0)} out of {questions.length} questions. 
+                  Your evaluation will be based on the questions you've completed.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEndTestConfirm(false)}
+                  className="flex-1 rounded-xl border border-white/10 bg-slate-800/50 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-slate-800/70 transition"
+                >
+                  Continue Assessment
+                </button>
+                <button
+                  onClick={endTestEarly}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-orange-600 hover:to-red-600 transition"
+                >
+                  End & Get Results
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Animated Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -1283,8 +1543,8 @@ const AptitudeAssessment: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-2xl font-bold mb-2">Comprehensive Aptitude & Logical Reasoning Assessment</h1>
-              <p className="text-gray-400">15 carefully selected questions from a bank of 110+ real interview questions</p>
+              <h1 className="text-2xl font-bold mb-2">Quick Aptitude & Logical Reasoning Assessment</h1>
+              <p className="text-gray-400">5 carefully selected questions from a bank of 110+ real interview questions</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl">
@@ -1293,6 +1553,15 @@ const AptitudeAssessment: React.FC = () => {
                   {formatTime(timeRemaining)}
                 </span>
               </div>
+              {currentQuestionIndex > 0 && (
+                <button
+                  onClick={() => setShowEndTestConfirm(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-orange-400/40 bg-orange-500/15 px-4 py-2 text-sm font-medium text-orange-200 hover:bg-orange-500/25 transition"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>End Test</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1370,21 +1639,33 @@ const AptitudeAssessment: React.FC = () => {
               Previous
             </button>
 
-            <div className="flex items-center gap-2">
-              {questions.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    index === currentQuestionIndex
-                      ? 'bg-sky-400'
-                      : index < currentQuestionIndex
-                      ? 'bg-emerald-400'
-                      : userAnswers[index]
-                      ? 'bg-yellow-400'
-                      : 'bg-gray-600'
-                  }`}
-                ></div>
-              ))}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                {questions.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      index === currentQuestionIndex
+                        ? 'bg-sky-400'
+                        : index < currentQuestionIndex
+                        ? 'bg-emerald-400'
+                        : userAnswers[index]
+                        ? 'bg-yellow-400'
+                        : 'bg-gray-600'
+                    }`}
+                  ></div>
+                ))}
+              </div>
+              
+              {currentQuestionIndex > 0 && (
+                <button
+                  onClick={() => setShowEndTestConfirm(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  <span>End Test</span>
+                </button>
+              )}
             </div>
 
             <button

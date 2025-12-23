@@ -1,0 +1,19 @@
+[
+  {
+    "_id": "demo_analytics_001",
+    "date": "2025-12-23T12:59:51.245797",
+    "metrics": {
+      "totalUsers": 1247,
+      "activeUsers": 89,
+      "interviewsCompleted": 156,
+      "jobFitAnalyses": 203,
+      "averageScore": 84.2,
+      "aiEngineUsage": {
+        "ollama": 145,
+        "gemini": 12,
+        "fallbackCount": 3
+      }
+    },
+    "demo_mode": true
+  }
+]

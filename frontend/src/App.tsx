@@ -13,7 +13,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import AboutPage from './components/about/AboutPage';
 import AptitudeAssessment from './components/aptitude/AptitudeAssessment';
 import JobFitAnalysis from './components/jobfit/JobFitAnalysis';
-import DemoShowcase from './components/demo/DemoShowcase';
+import LoginPage from './components/auth/LoginPage';
 
 function App() {
   // Disable automatic scroll restoration
@@ -30,6 +30,7 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={<Layout><LandingPage /></Layout>} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/login" element={<LoginPage />} />
         
         {/* All routes are now public - no authentication required */}
         <Route path="/dashboard" element={<Dashboard />} />
@@ -41,7 +42,6 @@ function App() {
         <Route path="/reports/:sessionId" element={<Layout><ReportViewer /></Layout>} />
         <Route path="/aptitude" element={<AptitudeAssessment />} />
         <Route path="/job-fit" element={<JobFitAnalysis />} />
-        <Route path="/demo" element={<DemoShowcase />} />
       </Routes>
     </Router>
   );

@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../layout/Layout';
 import { 
-  Video, Brain, Clock, Target, TrendingUp, Trophy, 
-  Calendar, PlayCircle, ArrowRight, History, BarChart3, Users
+  Video, Brain, Clock, Target, Trophy, 
+  Calendar, ArrowRight, History, BarChart3, Users
 } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [interviewHistory, setInterviewHistory] = useState<any[]>([]);
+  const [jobFitAnalyses, setJobFitAnalyses] = useState<any[]>([]);
+  const [aptitudeResults, setAptitudeResults] = useState<any[]>([]);
+  const [allActivities, setAllActivities] = useState<any[]>([]);
 
-  // Load user profile and interview history
+  // Load comprehensive user data
   useEffect(() => {
     const profile = localStorage.getItem('interviewProfile');
     if (profile) {
@@ -22,9 +25,9 @@ const Dashboard = () => {
       }
     }
 
-    // Load interview history from both localStorage and API
-    const loadHistory = async () => {
-      // First load from localStorage
+    // Load all user data from localStorage and APIs
+    const loadAllData = async () => {
+      // Load interview history
       const history = localStorage.getItem('interviewHistory');
       let localHistory: any[] = [];
       if (history) {
@@ -35,7 +38,29 @@ const Dashboard = () => {
         }
       }
 
-      // Then try to fetch from API and merge
+      // Load job fit analyses
+      const jobFitData = localStorage.getItem('jobFitAnalyses');
+      let localJobFit: any[] = [];
+      if (jobFitData) {
+        try {
+          localJobFit = JSON.parse(jobFitData);
+        } catch (e) {
+          // Failed to parse job fit data
+        }
+      }
+
+      // Load aptitude results
+      const aptitudeData = localStorage.getItem('aptitudeResults');
+      let localAptitude: any[] = [];
+      if (aptitudeData) {
+        try {
+          localAptitude = JSON.parse(aptitudeData);
+        } catch (e) {
+          // Failed to parse aptitude data
+        }
+      }
+
+      // Try to fetch from API and merge
       try {
         const { interviewApi } = await import('../../services/api');
         const apiResponse = await interviewApi.listReports();
@@ -47,46 +72,92 @@ const Dashboard = () => {
           return {
             ...localMatch,
             ...apiReport,
+            type: 'interview',
             date: apiReport.created_at ? new Date(apiReport.created_at).toISOString().split('T')[0] : (localMatch?.date || new Date().toISOString().split('T')[0]),
           };
         });
         
         // Add any localStorage-only entries
         const apiSessionIds = new Set(apiReports.map((r: any) => r.session_id));
-        const localOnly = localHistory.filter((h: any) => !apiSessionIds.has(h.session_id));
+        const localOnly = localHistory.filter((h: any) => !apiSessionIds.has(h.session_id))
+          .map(h => ({ ...h, type: 'interview' }));
         
-        setInterviewHistory([...merged, ...localOnly]);
+        const allInterviews = [...merged, ...localOnly];
+        setInterviewHistory(allInterviews);
+
+        // Set job fit analyses with type
+        const jobFitWithType = localJobFit.map(jf => ({ ...jf, type: 'job-fit' }));
+        setJobFitAnalyses(jobFitWithType);
+
+        // Set aptitude results with type
+        const aptitudeWithType = localAptitude.map(apt => ({ ...apt, type: 'aptitude' }));
+        setAptitudeResults(aptitudeWithType);
+
+        // Combine all activities for unified view
+        const combined = [
+          ...allInterviews,
+          ...jobFitWithType,
+          ...aptitudeWithType
+        ].sort((a, b) => new Date(b.date || b.created_at || new Date()).getTime() - new Date(a.date || a.created_at || new Date()).getTime());
+
+        setAllActivities(combined);
+
       } catch (err) {
         // If API fails, use localStorage only
-        setInterviewHistory(localHistory);
+        const interviewsWithType = localHistory.map(h => ({ ...h, type: 'interview' }));
+        const jobFitWithType = localJobFit.map(jf => ({ ...jf, type: 'job-fit' }));
+        const aptitudeWithType = localAptitude.map(apt => ({ ...apt, type: 'aptitude' }));
+        
+        setInterviewHistory(interviewsWithType);
+        setJobFitAnalyses(jobFitWithType);
+        setAptitudeResults(aptitudeWithType);
+
+        const combined = [
+          ...interviewsWithType,
+          ...jobFitWithType,
+          ...aptitudeWithType
+        ].sort((a, b) => new Date(b.date || b.created_at || new Date()).getTime() - new Date(a.date || a.created_at || new Date()).getTime());
+
+        setAllActivities(combined);
       }
     };
 
-    loadHistory();
+    loadAllData();
   }, []);
 
-  // Calculate stats from interview history
+  // Calculate comprehensive stats from all activities
   const userStats = (() => {
-    if (interviewHistory.length === 0) {
+    const totalInterviews = interviewHistory.length;
+    const totalJobFits = jobFitAnalyses.length;
+    const totalAptitude = aptitudeResults.length;
+    const totalActivities = totalInterviews + totalJobFits + totalAptitude;
+
+    if (totalActivities === 0) {
       return {
         totalInterviews: 0,
+        totalJobFits: 0,
+        totalAptitude: 0,
         averageScore: 0,
         improvementRate: 0,
         hoursSpent: 0
       };
     }
 
-    const totalInterviews = interviewHistory.length;
-    const scores = interviewHistory.map((i: any) => i.score || 0).filter((s: number) => s > 0);
-    const averageScore = scores.length > 0 
-      ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length)
+    // Calculate average scores across all activities
+    const interviewScores = interviewHistory.map((i: any) => i.score || i.overall_score || 0).filter((s: number) => s > 0);
+    const jobFitScores = jobFitAnalyses.map((jf: any) => jf.overall_fit_score || jf.overallFitScore || 0).filter((s: number) => s > 0);
+    const aptitudeScores = aptitudeResults.map((apt: any) => apt.overall_score || apt.score || 0).filter((s: number) => s > 0);
+    
+    const allScores = [...interviewScores, ...jobFitScores, ...aptitudeScores];
+    const averageScore = allScores.length > 0 
+      ? Math.round(allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length)
       : 0;
     
-    // Calculate improvement rate (compare last 5 interviews with previous 5)
+    // Calculate improvement rate (compare recent activities with older ones)
     let improvementRate = 0;
-    if (scores.length >= 10) {
-      const recent = scores.slice(-5);
-      const previous = scores.slice(-10, -5);
+    if (allScores.length >= 6) {
+      const recent = allScores.slice(-3);
+      const previous = allScores.slice(-6, -3);
       const recentAvg = recent.reduce((a: number, b: number) => a + b, 0) / recent.length;
       const previousAvg = previous.reduce((a: number, b: number) => a + b, 0) / previous.length;
       improvementRate = Math.round(((recentAvg - previousAvg) / previousAvg) * 100);
@@ -94,28 +165,64 @@ const Dashboard = () => {
 
     const hoursSpent = interviewHistory.reduce((total: number, i: any) => {
       const duration = i.duration || '0 min';
-      const minutes = parseInt(duration) || 0;
+      const minutes = parseInt(duration) || 45; // Default 45 min per interview
       return total + minutes / 60;
-    }, 0);
+    }, 0) + (totalJobFits * 0.5) + (totalAptitude * 0.75); // Estimate time for other activities
 
     return {
       totalInterviews,
+      totalJobFits,
+      totalAptitude,
       averageScore,
       improvementRate: improvementRate || 15, // fallback
       hoursSpent: Math.round(hoursSpent * 10) / 10
     };
   })();
 
-  // Get recent interviews (last 3) from history
-  const recentInterviews = interviewHistory.slice(0, 3).map((interview: any) => ({
-    id: interview.session_id || interview.id,
-    type: interview.interview_type || interview.type || "Technical Interview",
-    role: interview.role || userProfile?.estimated_role || userProfile?.role || "Software Engineer",
-    date: interview.date || new Date().toISOString().split('T')[0],
-    score: interview.score || interview.overallScore || 0,
-    duration: interview.duration || "45 min",
-    status: "completed"
-  }));
+  // Get recent activities (limited to 5 for dashboard overview)
+  const recentActivities = allActivities.slice(0, 5).map((activity: any) => {
+    if (activity.type === 'interview') {
+      return {
+        id: activity.session_id || activity.id,
+        type: "Interview",
+        subtype: activity.interview_type || activity.type || "Technical Interview",
+        role: activity.role || userProfile?.estimated_role || userProfile?.role || "Software Engineer",
+        date: activity.date || new Date().toISOString().split('T')[0],
+        score: activity.score || activity.overall_score || 0,
+        duration: activity.duration || "45 min",
+        status: "completed",
+        icon: "🎤",
+        color: "text-blue-500"
+      };
+    } else if (activity.type === 'job-fit') {
+      return {
+        id: activity.id || `jobfit_${Date.now()}`,
+        type: "Job Fit Analysis",
+        subtype: activity.targetRole || activity.role || "Software Engineer",
+        role: activity.targetRole || activity.role || "Software Engineer",
+        date: activity.date || activity.createdAt || new Date().toISOString().split('T')[0],
+        score: activity.overall_fit_score || activity.overallFitScore || 0,
+        duration: "30 min",
+        status: "completed",
+        icon: "🎯",
+        color: "text-emerald-500"
+      };
+    } else if (activity.type === 'aptitude') {
+      return {
+        id: activity.id || `aptitude_${Date.now()}`,
+        type: "Aptitude Test",
+        subtype: activity.test_type || "Comprehensive Assessment",
+        role: "General Assessment",
+        date: activity.date || activity.completedAt || new Date().toISOString().split('T')[0],
+        score: activity.overall_score || activity.score || 0,
+        duration: activity.duration || "45 min",
+        status: "completed",
+        icon: "🧠",
+        color: "text-purple-500"
+      };
+    }
+    return activity;
+  });
 
   const handleStartInterview = (interviewType?: string) => {
     if (interviewType) {
@@ -127,8 +234,14 @@ const Dashboard = () => {
     navigate('/setup');
   };
 
-  const handleViewReport = (sessionId: string) => {
-    navigate(`/report?sessionId=${sessionId}`);
+  const handleViewReport = (activityId: string, activityType: string) => {
+    if (activityType === 'Interview') {
+      navigate(`/report?sessionId=${activityId}`);
+    } else if (activityType === 'Job Fit Analysis') {
+      navigate(`/job-fit?analysisId=${activityId}`);
+    } else if (activityType === 'Aptitude Test') {
+      navigate(`/aptitude?resultId=${activityId}`);
+    }
   };
 
   const userName = userProfile?.name || userProfile?.estimated_role || "User";
@@ -179,32 +292,32 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-4 gap-8">
             {[
               { 
-                label: "Sessions", 
+                label: "Interviews", 
                 value: userStats.totalInterviews, 
                 icon: Video, 
-                color: "text-emerald-500",
-                desc: "Total Practice Sessions"
+                color: "text-blue-500",
+                desc: "Technical & Behavioral Sessions"
               },
               { 
-                label: "Ready Score", 
+                label: "Job Fits", 
+                value: userStats.totalJobFits, 
+                icon: Target, 
+                color: "text-emerald-500",
+                desc: "Role Compatibility Analyses"
+              },
+              { 
+                label: "Aptitude Tests", 
+                value: userStats.totalAptitude, 
+                icon: Brain, 
+                color: "text-purple-500",
+                desc: "Logical & Quantitative Assessments"
+              },
+              { 
+                label: "Avg Score", 
                 value: userStats.averageScore > 0 ? `${userStats.averageScore}%` : "0%", 
                 icon: Trophy, 
-                color: "text-purple-500",
-                desc: "Average Performance"
-              },
-              { 
-                label: "Growth Rate", 
-                value: `+${userStats.improvementRate}%`, 
-                icon: TrendingUp, 
-                color: "text-blue-500",
-                desc: "Improvement Trajectory"
-              },
-              { 
-                label: "Hours", 
-                value: userStats.hoursSpent, 
-                icon: Clock, 
                 color: "text-orange-500",
-                desc: "Practice Time Invested"
+                desc: "Overall Performance Average"
               }
             ].map((stat, index) => (
               <div key={index} className="glass-panel p-12 rounded-[48px] hover:border-purple-500/40 transition-all group text-center">
@@ -288,33 +401,36 @@ const Dashboard = () => {
               </div>
               
               <div className="space-y-4">
-                {recentInterviews.length > 0 ? (
-                  recentInterviews.map((interview) => (
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((activity) => (
                     <button
-                      key={interview.id}
-                      onClick={() => handleViewReport(interview.id)}
+                      key={activity.id}
+                      onClick={() => handleViewReport(activity.id, activity.type)}
                       className="w-full p-6 border border-white/5 bg-white/5 rounded-3xl hover:border-purple-500/40 transition-all text-left group"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="text-sm font-black uppercase tracking-widest text-white group-hover:text-purple-400 transition-colors">
-                            {interview.type}
-                          </p>
-                          <p className="text-xs text-slate-500">{interview.role}</p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{activity.icon}</span>
+                          <div>
+                            <p className="text-sm font-black uppercase tracking-widest text-white group-hover:text-purple-400 transition-colors">
+                              {activity.type}
+                            </p>
+                            <p className="text-xs text-slate-500">{activity.subtype}</p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-black text-white">{interview.score || 'N/A'}</p>
+                          <p className="text-2xl font-black text-white">{activity.score || 'N/A'}</p>
                           <p className="text-[10px] uppercase text-slate-500 font-bold tracking-[0.2em]">Score</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-slate-500">
                         <span className="flex items-center">
                           <Calendar className="w-3 h-3 mr-1" />
-                          {interview.date}
+                          {activity.date}
                         </span>
                         <span className="flex items-center">
                           <Clock className="w-3 h-3 mr-1" />
-                          {interview.duration}
+                          {activity.duration}
                         </span>
                         <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
@@ -323,20 +439,23 @@ const Dashboard = () => {
                 ) : (
                   <div className="p-8 border border-white/5 bg-white/5 rounded-3xl text-center">
                     <History className="w-12 h-12 mx-auto mb-4 text-slate-500 opacity-50" />
-                    <p className="text-sm text-slate-400 mb-2">No sessions yet</p>
-                    <p className="text-xs text-slate-500">Start your first interview to see activity here</p>
+                    <p className="text-sm text-slate-400 mb-2">No activities yet</p>
+                    <p className="text-xs text-slate-500">Start your first assessment to see activity here</p>
                   </div>
                 )}
               </div>
               
-              {recentInterviews.length > 0 && (
-                <button
-                  onClick={() => navigate('/reports')}
-                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  <span>View All Sessions</span>
-                  <ArrowRight size={12} />
-                </button>
+              {recentActivities.length > 0 && (
+                <div className="text-center">
+                  <button
+                    onClick={() => navigate('/reports')}
+                    className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-700 hover:to-sky-700 rounded-xl font-bold transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span>View All Reports</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
             
@@ -354,41 +473,27 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Quick Actions */}
+        {/* View Reports Section */}
         <section className="max-w-7xl mx-auto px-6 py-20 border-t border-white/5">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">View All <span className="text-emerald-400 italic">Reports.</span></h2>
+            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">Access Complete Activity History & Analytics</p>
+            
             <button
               onClick={() => navigate('/reports')}
-              className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group"
+              className="relative group"
             >
-              <BarChart3 className="text-purple-500 group-hover:scale-110 transition-transform" size={24} />
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white">Performance Analytics</p>
-                <p className="text-xs text-slate-500">Detailed session reports</p>
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-sky-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+              <div className="relative flex items-center justify-center space-x-3 bg-gradient-to-r from-emerald-500 to-sky-500 px-8 py-4 rounded-xl font-semibold transform group-hover:scale-105 transition-all duration-300">
+                <BarChart3 className="w-5 h-5" />
+                <span>View All Reports</span>
+                <ArrowRight className="w-5 h-5" />
               </div>
             </button>
             
-            <button
-              onClick={() => navigate('/setup')}
-              className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-emerald-500/40 transition-all group"
-            >
-              <PlayCircle className="text-emerald-500 group-hover:scale-110 transition-transform" size={24} />
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white">Quick Start</p>
-                <p className="text-xs text-slate-500">Launch new session</p>
-              </div>
-            </button>
-            
-            <button
-              onClick={() => navigate('/job-fit')}
-              className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/40 transition-all group"
-            >
-              <Target className="text-blue-500 group-hover:scale-110 transition-transform" size={24} />
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white">Job Matching</p>
-                <p className="text-xs text-slate-500">Find your fit</p>
-              </div>
-            </button>
+            <p className="text-xs text-slate-500 mt-4 max-w-md mx-auto">
+              Access detailed analysis, performance trends, and comprehensive reports for all your interviews, job fits, and aptitude tests.
+            </p>
           </div>
         </section>
       </div>

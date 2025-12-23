@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "demo_jobfit_001",
+    "candidateName": "Alex Johnson",
+    "targetRole": "Senior Software Engineer",
+    "overallFitScore": 87,
+    "skillMatchPercentage": 85,
+    "experienceMatchPercentage": 90,
+    "recommendation": "Excellent Fit",
+    "confidenceScore": 94,
+    "matchedSkills": [
+      "Python",
+      "JavaScript",
+      "React",
+      "Node.js",
+      "AWS",
+      "Docker"
+    ],
+    "missingSkills": [
+      "Kubernetes",
+      "System Design",
+      "Microservices"
+    ],
+    "experienceYears": 2.0,
+    "createdAt": "2025-12-23T12:59:51.245790",
+    "demo_mode": true
+  }
+]

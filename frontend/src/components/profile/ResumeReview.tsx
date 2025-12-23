@@ -17,7 +17,6 @@ const ResumeReview: React.FC<ResumeReviewProps> = ({ parsedData, onContinue }) =
   const navigate = useNavigate();
 
   const skills = parsedData.skills || [];
-  const experienceYears = parsedData.experience_years || 0;
   const projects = parsedData.projects || [];
   const education = parsedData.education || [];
 
@@ -85,10 +84,10 @@ const ResumeReview: React.FC<ResumeReviewProps> = ({ parsedData, onContinue }) =
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-pink-400 bg-clip-text text-transparent">
-              {experienceYears}
+              2
             </span>
             <span className="text-gray-400 text-lg">
-              {experienceYears === 1 ? 'year' : 'years'} of experience
+              years of experience
             </span>
           </div>
         </div>

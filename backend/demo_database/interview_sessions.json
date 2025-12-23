@@ -1,0 +1,52 @@
+[
+  {
+    "_id": "demo_interview_001",
+    "candidateName": "Alex Johnson",
+    "role": "Software Engineer",
+    "interviewType": "Technical Interview",
+    "score": 88,
+    "feedback": "Strong technical skills, excellent problem-solving approach",
+    "createdAt": "2025-12-23T12:59:51.245766",
+    "duration": 45,
+    "questions": [
+      {
+        "question": "Explain the difference between REST and GraphQL APIs",
+        "answer": "REST uses multiple endpoints while GraphQL uses a single endpoint with flexible queries",
+        "score": 9,
+        "feedback": "Excellent understanding of API architectures"
+      }
+    ],
+    "overallAssessment": {
+      "technical": 90,
+      "communication": 85,
+      "problemSolving": 88,
+      "confidence": 87
+    },
+    "demo_mode": true
+  },
+  {
+    "_id": "demo_interview_002",
+    "candidateName": "Sarah Chen",
+    "role": "Data Scientist",
+    "interviewType": "Technical Interview",
+    "score": 92,
+    "feedback": "Outstanding analytical skills and ML knowledge",
+    "createdAt": "2025-12-23T12:59:51.245787",
+    "duration": 50,
+    "questions": [
+      {
+        "question": "How would you handle missing data in a machine learning dataset?",
+        "answer": "Multiple approaches: imputation, deletion, or using algorithms that handle missing values naturally",
+        "score": 10,
+        "feedback": "Comprehensive understanding of data preprocessing"
+      }
+    ],
+    "overallAssessment": {
+      "technical": 95,
+      "communication": 88,
+      "problemSolving": 93,
+      "confidence": 90
+    },
+    "demo_mode": true
+  }
+]

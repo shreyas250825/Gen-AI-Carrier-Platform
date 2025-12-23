@@ -8,9 +8,20 @@ import json
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
 import logging
+
+# Optional imports for AWS - fallback to demo mode if not available
+try:
+    import boto3
+    from botocore.exceptions import ClientError, NoCredentialsError
+    AWS_AVAILABLE = True
+except ImportError:
+    AWS_AVAILABLE = False
+    # Create dummy classes for type hints
+    class ClientError(Exception):
+        pass
+    class NoCredentialsError(Exception):
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +47,7 @@ class S3Service:
     def _initialize_s3_client(self):
         """Initialize S3 client with fallback to demo mode"""
         try:
-            if not self.demo_mode:
+            if not self.demo_mode and AWS_AVAILABLE:
                 self.s3_client = boto3.client(
                     's3',
                     region_name=self.region,
@@ -47,9 +58,17 @@ class S3Service:
                 self.s3_client.head_bucket(Bucket=self.bucket_name)
                 logger.info(f"✅ Connected to S3 bucket: {self.bucket_name}")
             else:
-                logger.info("🎭 Running in DEMO MODE - using local file storage")
+                if not AWS_AVAILABLE:
+                    logger.info("🎭 AWS SDK not available - running in DEMO MODE")
+                else:
+                    logger.info("🎭 Running in DEMO MODE - using local file storage")
+                self.demo_mode = True
         except (ClientError, NoCredentialsError) as e:
             logger.warning(f"⚠️ S3 connection failed, switching to demo mode: {e}")
+            self.demo_mode = True
+            self.s3_client = None
+        except Exception as e:
+            logger.warning(f"⚠️ S3 initialization failed, switching to demo mode: {e}")
             self.demo_mode = True
             self.s3_client = None
     

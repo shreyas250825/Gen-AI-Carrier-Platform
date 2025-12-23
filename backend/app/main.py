@@ -10,6 +10,25 @@ from app.routes import aptitude_routes, job_fit_routes, ai_engine_routes, demo_r
 from app.middleware.cors import setup_cors
 from app.config import get_settings
 
+# Print startup message
+try:
+    print("\n" + "="*80)
+    print("🚀 GenAI Career Intelligence Platform - AWS ImpactX Challenge")
+    print("="*80)
+    print("✅ Backend server starting...")
+    print("🎭 Demo mode enabled - no dependencies required!")
+    print("")
+    print("📍 Access Points:")
+    print("   • API Documentation: http://localhost:8000/docs")
+    print("   • Demo Status: http://localhost:8000/api/v1/demo/status")
+    print("   • Architecture: http://localhost:8000/api/v1/demo/architecture-overview")
+    print("")
+    print("🎯 Ready for AWS ImpactX Challenge presentation!")
+    print("="*80)
+    print("")
+except:
+    pass
+
 # Initialize settings
 settings = get_settings()
 

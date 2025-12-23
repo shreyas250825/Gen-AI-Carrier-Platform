@@ -12,8 +12,8 @@ const LandingPage: React.FC = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 blur-[150px] rounded-full -z-10 animate-pulse" />
         
         <div className="max-w-6xl animate-fade-in flex flex-col items-center">
-          {/* Visual Spacer */}
-          <div className="h-16 md:h-24" /> 
+          {/* Visual Spacer - Reduced */}
+          <div className="h-8 md:h-12" /> 
 
           <div className="inline-block px-4 py-1.5 rounded-full border border-purple-500/20 bg-purple-500/5 text-purple-400 text-[9px] font-black uppercase tracking-[0.4em] mb-6">
             AWS ImpactX Finals · Team 403 Forbidden
