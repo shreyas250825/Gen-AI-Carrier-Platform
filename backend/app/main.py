@@ -6,7 +6,7 @@ import os
 
 from app.routes import health_check, interview_routes, resume_routes, report_routes
 # Import new routes for enhanced features
-from app.routes import aptitude_routes, job_fit_routes, ai_engine_routes
+from app.routes import aptitude_routes, job_fit_routes, ai_engine_routes, demo_routes
 from app.middleware.cors import setup_cors
 from app.config import get_settings
 
@@ -38,6 +38,7 @@ app.include_router(report_routes.router, prefix="/api/v1/reports", tags=["Report
 app.include_router(aptitude_routes.router, tags=["Aptitude Assessment"])
 app.include_router(job_fit_routes.router, tags=["Job Fit Analysis"])
 app.include_router(ai_engine_routes.router, prefix="/api/v1", tags=["AI Engine Management"])
+app.include_router(demo_routes.router, tags=["AWS ImpactX Demo"])
 
 
 @app.get("/")
