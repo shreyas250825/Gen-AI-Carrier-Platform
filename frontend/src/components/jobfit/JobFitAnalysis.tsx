@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Upload, FileText, Briefcase, Target, TrendingUp, 
-  CheckCircle, AlertCircle, ArrowRight, RefreshCw,
-  User, MapPin, Calendar, Award, BookOpen, X, FileCheck,
+  CheckCircle, AlertCircle, Calendar, Award, BookOpen,
   Search, Edit3, Loader2
 } from 'lucide-react';
 import Layout from '../layout/Layout';
@@ -156,15 +155,6 @@ const JobFitAnalysis: React.FC = () => {
     setSelectedRole(role);
     setIsCustomRole(false);
     setCustomRole('');
-  };
-
-  const handleCustomRoleToggle = () => {
-    setIsCustomRole(!isCustomRole);
-    if (!isCustomRole) {
-      setSelectedRole('');
-    } else {
-      setCustomRole('');
-    }
   };
 
   const handleAnalyze = async () => {
@@ -437,9 +427,8 @@ const JobFitAnalysis: React.FC = () => {
                           type="text"
                           placeholder="Search roles..."
                           className="w-full pl-10 pr-4 py-3 bg-slate-700/30 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-sky-400/50"
-                          onChange={(e) => {
+                          onChange={() => {
                             // Simple search filter - you can enhance this
-                            const searchTerm = e.target.value.toLowerCase();
                             // Filter logic here if needed
                           }}
                         />

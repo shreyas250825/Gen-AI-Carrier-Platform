@@ -262,7 +262,7 @@ class ResumeService:
     
     def _extract_experience(self, text: str) -> Dict[str, Any]:
         """Extract experience information using advanced date parsing"""
-        years_experience = 0
+        years_experience = 1.0  # Default to 12 months (1 year) instead of 0
         companies = []
         positions = []
         text_lower = text.lower()
@@ -619,8 +619,8 @@ class ResumeService:
                 missing.append(field)
             elif field == "projects" and (not isinstance(value, list) or len(value) == 0):
                 missing.append(field)
-            elif field == "experience_years" and (not isinstance(value, (int, float)) or value == 0):
-                # Experience years can be 0, but we'll still flag it if it's missing
+            elif field == "experience_years" and (not isinstance(value, (int, float)) or value < 0):
+                # Experience years should be at least 0, default is now 1.0 (12 months)
                 if field not in parsed:
                     missing.append(field)
         
@@ -648,7 +648,7 @@ class ResumeService:
         
         return best_match
     
-    def _get_experience_level(self, years: int) -> str:
+    def _get_experience_level(self, years: float) -> str:
         """Get experience level based on years"""
         if years <= 2:
             return "Junior"
@@ -662,10 +662,13 @@ class ResumeService:
     def _generate_summary(self, skills: List[str], experience: Dict[str, Any]) -> str:
         """Generate a summary based on extracted data"""
         level = experience.get('level', 'Junior')
-        years = experience.get('years_experience', 0)
+        years = experience.get('years_experience', 1.0)
         top_skills = skills[:5]
         
-        summary = f"{level} professional with {years} years of experience. "
+        # Format years nicely (show as integer if it's a whole number)
+        years_str = f"{int(years)}" if years == int(years) else f"{years:.1f}"
+        
+        summary = f"{level} professional with {years_str} years of experience. "
         summary += f"Skilled in {', '.join(top_skills)}."
         
         return summary
