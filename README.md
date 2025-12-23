@@ -4,6 +4,9 @@
 
 The **GenAI Career Intelligence Platform** is an advanced AI-powered career development system that provides intelligent interview preparation, job fit analysis, and aptitude assessment. Built for the **AWS ImpactX Challenge – IIT Bombay TechFest** by **Team 403 Forbidden**.
 
+### Technical Documentation - https://github.com/shreyas250825/Gen-AI-Carrier-Platform/blob/main/Technical%20Documentation%20Gen%20AI%20Carrier%20Platform.pdf
+
+
 ### 🌟 Key Features
 
 - **🤖 Dual AI Processing**: Local (Ollama) + Cloud (Gemini) with intelligent routing
